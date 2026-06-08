@@ -3,13 +3,16 @@
     "name": "ExpoReactNativeProject",
     "slug": "ExpoReactNativeProject",
     "version": "1.0.0",
+    "scheme": "exporeactnative",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.jasminos"
     },
     "android": {
+      "package": "com.jasminos",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -28,7 +31,42 @@
           "color": "#5B8CFF"
         }
       ],
-      "expo-web-browser"
-    ]
+      "expo-web-browser",
+      [
+        "expo-share-intent",
+        {
+          "iosActivationRules": {
+            "NSExtensionActivationSupportsWebURLWithMaxCount": 1,
+            "NSExtensionActivationSupportsWebPageWithMaxCount": 1,
+            "NSExtensionActivationSupportsText": true
+          },
+          "androidIntentFilters": [
+            "text/*"
+          ]
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "build": {
+          "experimental": {
+            "ios": {
+              "appExtensions": [
+                {
+                  "targetName": "ShareExtension",
+                  "bundleIdentifier": "com.jasminos.share-extension",
+                  "entitlements": {
+                    "com.apple.security.application-groups": [
+                      "group.com.jasminos"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "projectId": "aafb3621-d312-4a63-bfe2-79e5aac7aa1e"
+      }
+    }
   }
 }

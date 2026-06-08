@@ -32,6 +32,12 @@ export default function AddRnDScreen({ navigation, route }) {
     if (!typeTouched) setType(detectType(content));
   }, [content, typeTouched]);
 
+  // If a new link is shared into the app while this screen is already open,
+  // refresh the content with the newly shared text.
+  useEffect(() => {
+    if (shared) setContent(shared);
+  }, [shared]);
+
   async function pasteFromClipboard() {
     const text = await Clipboard.getStringAsync();
     if (!text) {

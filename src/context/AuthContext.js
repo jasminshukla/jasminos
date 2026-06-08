@@ -1,68 +1,137 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { getItem, setItem, KEYS } from '../lib/storage';
-import { uid } from '../lib/id';
+import { Alert } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
+import {
+  GoogleAuthProvider,
+  signInWithCredential,
+  signInAnonymously,
+  onAuthStateChanged,
+  signOut,
+} from '@firebase/auth';
+import { auth } from '../lib/firebase';
+import {
+  googleClientIds,
+  isFirebaseConfigured,
+  isGoogleConfigured,
+} from '../config/firebaseConfig';
+
+// Finishes the web auth session if the app was reopened mid sign-in.
+WebBrowser.maybeCompleteAuthSession();
 
 const AuthContext = createContext(null);
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null); // logged-in user { id, name, email }
-  const [loading, setLoading] = useState(true);
+// Map a Firebase user to the shape the rest of the app expects ({ id, name, email }).
+function mapUser(u) {
+  if (!u) return null;
+  return {
+    id: u.uid,
+    name: u.displayName || (u.isAnonymous ? 'Guest' : u.email ? u.email.split('@')[0] : 'You'),
+    email: u.email || (u.isAnonymous ? 'Signed in as guest' : ''),
+    photo: u.photoURL || null,
+    isGuest: !!u.isAnonymous,
+  };
+}
 
-  // Restore session on launch.
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [signingIn, setSigningIn] = useState(false);
+
+  // Google OAuth request — returns an id_token we exchange for a Firebase credential.
+  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
+    clientId: googleClientIds.web,
+    iosClientId: googleClientIds.ios,
+    androidClientId: googleClientIds.android,
+  });
+
+  // Keep React state in sync with Firebase's auth state (also restores the
+  // persisted session on launch via AsyncStorage).
   useEffect(() => {
-    (async () => {
-      const session = await getItem(KEYS.SESSION, null);
-      if (session) setUser(session);
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setUser(mapUser(u));
       setLoading(false);
-    })();
+    });
+    return unsub;
   }, []);
 
-  async function register({ name, email, password }) {
-    const cleanEmail = (email || '').trim().toLowerCase();
-    if (!name?.trim()) throw new Error('Please enter your name.');
-    if (!cleanEmail) throw new Error('Please enter your email.');
-    if (!password || password.length < 4)
-      throw new Error('Password must be at least 4 characters.');
-
-    const users = await getItem(KEYS.USERS, []);
-    if (users.some((u) => u.email === cleanEmail)) {
-      throw new Error('An account with this email already exists.');
+  // When Google returns an id_token, sign in to Firebase with it.
+  useEffect(() => {
+    if (!response) return;
+    if (response.type === 'success') {
+      const idToken = response.params?.id_token || response.authentication?.idToken;
+      if (!idToken) {
+        setSigningIn(false);
+        Alert.alert('Sign-in failed', 'Google did not return an ID token.');
+        return;
+      }
+      const credential = GoogleAuthProvider.credential(idToken);
+      signInWithCredential(auth, credential)
+        .catch((e) => Alert.alert('Sign-in failed', e.message))
+        .finally(() => setSigningIn(false));
+    } else if (response.type === 'error') {
+      setSigningIn(false);
+      Alert.alert('Sign-in failed', response.error?.message || 'Google sign-in was cancelled.');
+    } else {
+      // dismiss / cancel
+      setSigningIn(false);
     }
-    const newUser = {
-      id: uid('user'),
-      name: name.trim(),
-      email: cleanEmail,
-      password, // NOTE: plain text for this demo. Hash on a real backend.
-      createdAt: Date.now(),
-    };
-    await setItem(KEYS.USERS, [...users, newUser]);
+  }, [response]);
 
-    const session = { id: newUser.id, name: newUser.name, email: newUser.email };
-    await setItem(KEYS.SESSION, session);
-    setUser(session);
-    return session;
+  async function signInWithGoogle() {
+    if (!isFirebaseConfigured || !isGoogleConfigured) {
+      Alert.alert(
+        'Setup required',
+        'Add your Firebase config and Google OAuth client IDs in src/config/firebaseConfig.js. See FIREBASE_SETUP.md.'
+      );
+      return;
+    }
+    if (!request) return; // request not ready yet
+    setSigningIn(true);
+    try {
+      await promptAsync();
+    } catch (e) {
+      setSigningIn(false);
+      Alert.alert('Sign-in failed', e.message);
+    }
   }
 
-  async function login({ email, password }) {
-    const cleanEmail = (email || '').trim().toLowerCase();
-    const users = await getItem(KEYS.USERS, []);
-    const found = users.find((u) => u.email === cleanEmail);
-    if (!found || found.password !== password) {
-      throw new Error('Invalid email or password.');
+  async function signInAsGuest() {
+    if (!isFirebaseConfigured) {
+      Alert.alert(
+        'Setup required',
+        'Add your Firebase config in src/config/firebaseConfig.js. See FIREBASE_SETUP.md.'
+      );
+      return;
     }
-    const session = { id: found.id, name: found.name, email: found.email };
-    await setItem(KEYS.SESSION, session);
-    setUser(session);
-    return session;
+    setSigningIn(true);
+    try {
+      // Requires the "Anonymous" provider to be enabled in Firebase Auth.
+      await signInAnonymously(auth);
+    } catch (e) {
+      Alert.alert('Guest sign-in failed', e.message);
+    } finally {
+      setSigningIn(false);
+    }
   }
 
   async function logout() {
-    await setItem(KEYS.SESSION, null);
-    setUser(null);
+    await signOut(auth);
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, register, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        signingIn,
+        // The Google request must be initialized before the button can prompt.
+        canSignIn: !!request,
+        signInWithGoogle,
+        signInAsGuest,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

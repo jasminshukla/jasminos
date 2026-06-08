@@ -1,10 +1,26 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { getItem, setItem, KEYS } from '../lib/storage';
-import { uid } from '../lib/id';
+import {
+  collection,
+  query,
+  orderBy,
+  onSnapshot,
+  addDoc,
+  doc,
+  updateDoc,
+  deleteDoc,
+} from '@firebase/firestore';
+import { db } from '../lib/firebase';
 import { scheduleReminder, cancelReminder } from '../lib/notifications';
 import { useAuth } from './AuthContext';
 
 const StoreContext = createContext(null);
+
+// Firestore layout: users/{uid}/followups/{id} and users/{uid}/rnd/{id}.
+// Each item's `createdAt` is stored as a client epoch (ms) so the existing UI
+// (which formats/sorts on a number) keeps working unchanged.
+function userCol(uid, name) {
+  return collection(db, 'users', uid, name);
+}
 
 export function StoreProvider({ children }) {
   const { user } = useAuth();
@@ -12,39 +28,58 @@ export function StoreProvider({ children }) {
   const [rnd, setRnd] = useState([]);
   const [ready, setReady] = useState(false);
 
-  // Load this user's data whenever the logged-in user changes.
+  // Subscribe to this user's data in real time; tear down on user change/logout.
   useEffect(() => {
-    (async () => {
-      setReady(false);
-      if (!user) {
-        setFollowups([]);
-        setRnd([]);
-        setReady(true);
-        return;
-      }
-      const allF = await getItem(KEYS.FOLLOWUPS, []);
-      const allR = await getItem(KEYS.RND, []);
-      setFollowups(allF.filter((f) => f.userId === user.id));
-      setRnd(allR.filter((r) => r.userId === user.id));
+    if (!user) {
+      setFollowups([]);
+      setRnd([]);
       setReady(true);
-    })();
+      return;
+    }
+    setReady(false);
+
+    let followupsLoaded = false;
+    let rndLoaded = false;
+    const markReady = () => {
+      if (followupsLoaded && rndLoaded) setReady(true);
+    };
+
+    const fq = query(userCol(user.id, 'followups'), orderBy('createdAt', 'desc'));
+    const rq = query(userCol(user.id, 'rnd'), orderBy('createdAt', 'desc'));
+
+    const unsubF = onSnapshot(
+      fq,
+      (snap) => {
+        setFollowups(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+        followupsLoaded = true;
+        markReady();
+      },
+      (err) => {
+        console.warn('followups snapshot failed', err);
+        followupsLoaded = true;
+        markReady();
+      }
+    );
+
+    const unsubR = onSnapshot(
+      rq,
+      (snap) => {
+        setRnd(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+        rndLoaded = true;
+        markReady();
+      },
+      (err) => {
+        console.warn('rnd snapshot failed', err);
+        rndLoaded = true;
+        markReady();
+      }
+    );
+
+    return () => {
+      unsubF();
+      unsubR();
+    };
   }, [user]);
-
-  // Persist helpers merge the current user's items back into the global list
-  // (so multiple accounts on one device stay isolated).
-  async function persistFollowups(next) {
-    setFollowups(next);
-    const all = await getItem(KEYS.FOLLOWUPS, []);
-    const others = all.filter((f) => f.userId !== user.id);
-    await setItem(KEYS.FOLLOWUPS, [...others, ...next]);
-  }
-
-  async function persistRnd(next) {
-    setRnd(next);
-    const all = await getItem(KEYS.RND, []);
-    const others = all.filter((r) => r.userId !== user.id);
-    await setItem(KEYS.RND, [...others, ...next]);
-  }
 
   // ----- Follow-ups -----
   async function addFollowup({ title, note, contact, remindAt }) {
@@ -56,9 +91,7 @@ export function StoreProvider({ children }) {
         date: remindAt,
       });
     }
-    const item = {
-      id: uid('fu'),
-      userId: user.id,
+    return addDoc(userCol(user.id, 'followups'), {
       title: title.trim(),
       note: (note || '').trim(),
       contact: (contact || '').trim(),
@@ -66,50 +99,42 @@ export function StoreProvider({ children }) {
       notificationId,
       done: false,
       createdAt: Date.now(),
-    };
-    await persistFollowups([item, ...followups]);
-    return item;
+    });
   }
 
   async function toggleFollowupDone(id) {
-    const next = await Promise.all(
-      followups.map(async (f) => {
-        if (f.id !== id) return f;
-        const done = !f.done;
-        // Cancel the reminder once it's completed.
-        if (done && f.notificationId) {
-          await cancelReminder(f.notificationId);
-          return { ...f, done, notificationId: null };
-        }
-        return { ...f, done };
-      })
-    );
-    await persistFollowups(next);
+    const target = followups.find((f) => f.id === id);
+    if (!target) return;
+    const done = !target.done;
+    const ref = doc(db, 'users', user.id, 'followups', id);
+    if (done && target.notificationId) {
+      // Cancel the scheduled reminder once it's completed.
+      await cancelReminder(target.notificationId);
+      await updateDoc(ref, { done, notificationId: null });
+    } else {
+      await updateDoc(ref, { done });
+    }
   }
 
   async function deleteFollowup(id) {
     const target = followups.find((f) => f.id === id);
     if (target?.notificationId) await cancelReminder(target.notificationId);
-    await persistFollowups(followups.filter((f) => f.id !== id));
+    await deleteDoc(doc(db, 'users', user.id, 'followups', id));
   }
 
   // ----- R&D -----
   async function addRnd({ type, content, title, tags }) {
-    const item = {
-      id: uid('rnd'),
-      userId: user.id,
+    return addDoc(userCol(user.id, 'rnd'), {
       type: type || 'note',
       title: (title || '').trim(),
       content: (content || '').trim(),
       tags: tags || [],
       createdAt: Date.now(),
-    };
-    await persistRnd([item, ...rnd]);
-    return item;
+    });
   }
 
   async function deleteRnd(id) {
-    await persistRnd(rnd.filter((r) => r.id !== id));
+    await deleteDoc(doc(db, 'users', user.id, 'rnd', id));
   }
 
   return (
