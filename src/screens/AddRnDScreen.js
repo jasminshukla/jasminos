@@ -16,13 +16,11 @@ function detectType(text) {
   return 'note';
 }
 
-export default function AddRnDScreen({ navigation, route }) {
+export default function AddRnDScreen({ navigation }) {
   const { addRnd } = useStore();
-  // A shared payload (from another app or deep link) can be passed in via params.
-  const shared = route?.params?.sharedText;
-  const [content, setContent] = useState(shared || '');
+  const [content, setContent] = useState('');
   const [title, setTitle] = useState('');
-  const [type, setType] = useState(detectType(shared));
+  const [type, setType] = useState('note');
   const [tagText, setTagText] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -31,12 +29,6 @@ export default function AddRnDScreen({ navigation, route }) {
   useEffect(() => {
     if (!typeTouched) setType(detectType(content));
   }, [content, typeTouched]);
-
-  // If a new link is shared into the app while this screen is already open,
-  // refresh the content with the newly shared text.
-  useEffect(() => {
-    if (shared) setContent(shared);
-  }, [shared]);
 
   async function pasteFromClipboard() {
     const text = await Clipboard.getStringAsync();

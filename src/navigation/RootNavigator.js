@@ -5,7 +5,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LoginScreen from '../screens/LoginScreen';
 import AppTabs from './AppTabs';
 import { useAuth } from '../context/AuthContext';
-import { navigationRef } from './navigationRef';
 import { colors } from '../theme';
 
 const Stack = createNativeStackNavigator();
@@ -27,7 +26,7 @@ export default function RootNavigator() {
   }
 
   return (
-    <NavigationContainer ref={navigationRef} theme={navTheme}>
+    <NavigationContainer theme={navTheme}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
           <Stack.Screen name="App" component={AppTabs} />
