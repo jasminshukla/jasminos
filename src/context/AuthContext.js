@@ -6,6 +6,9 @@ import {
   GoogleAuthProvider,
   signInWithCredential,
   signInAnonymously,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  updateProfile,
   onAuthStateChanged,
   signOut,
 } from '@firebase/auth';
@@ -20,6 +23,31 @@ import {
 WebBrowser.maybeCompleteAuthSession();
 
 const AuthContext = createContext(null);
+
+// Turn Firebase auth error codes into friendly messages.
+function prettyAuthError(e) {
+  const code = e?.code || '';
+  switch (code) {
+    case 'auth/invalid-email':
+      return 'That email address looks invalid.';
+    case 'auth/email-already-in-use':
+      return 'An account with this email already exists. Try signing in instead.';
+    case 'auth/weak-password':
+      return 'Password is too weak — use at least 6 characters.';
+    case 'auth/missing-password':
+      return 'Please enter a password.';
+    case 'auth/invalid-credential':
+    case 'auth/wrong-password':
+    case 'auth/user-not-found':
+      return 'Incorrect email or password.';
+    case 'auth/too-many-requests':
+      return 'Too many attempts. Please wait a bit and try again.';
+    case 'auth/operation-not-allowed':
+      return 'Email/password sign-in is not enabled in Firebase. Enable it in Authentication → Sign-in method.';
+    default:
+      return e?.message || 'Something went wrong. Please try again.';
+  }
+}
 
 // Map a Firebase user to the shape the rest of the app expects ({ id, name, email }).
 function mapUser(u) {
@@ -96,6 +124,45 @@ export function AuthProvider({ children }) {
     }
   }
 
+  async function signInWithEmail(email, password) {
+    if (!isFirebaseConfigured) {
+      Alert.alert('Setup required', 'Add your Firebase config in src/config/firebaseConfig.js.');
+      return false;
+    }
+    setSigningIn(true);
+    try {
+      await signInWithEmailAndPassword(auth, (email || '').trim(), password);
+      return true;
+    } catch (e) {
+      Alert.alert('Sign-in failed', prettyAuthError(e));
+      return false;
+    } finally {
+      setSigningIn(false);
+    }
+  }
+
+  async function signUpWithEmail(name, email, password) {
+    if (!isFirebaseConfigured) {
+      Alert.alert('Setup required', 'Add your Firebase config in src/config/firebaseConfig.js.');
+      return false;
+    }
+    setSigningIn(true);
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, (email || '').trim(), password);
+      if (name?.trim()) {
+        await updateProfile(cred.user, { displayName: name.trim() });
+        // updateProfile doesn't re-fire onAuthStateChanged, so refresh manually.
+        setUser(mapUser(auth.currentUser));
+      }
+      return true;
+    } catch (e) {
+      Alert.alert('Sign-up failed', prettyAuthError(e));
+      return false;
+    } finally {
+      setSigningIn(false);
+    }
+  }
+
   async function signInAsGuest() {
     if (!isFirebaseConfigured) {
       Alert.alert(
@@ -128,6 +195,8 @@ export function AuthProvider({ children }) {
         // The Google request must be initialized before the button can prompt.
         canSignIn: !!request,
         signInWithGoogle,
+        signInWithEmail,
+        signUpWithEmail,
         signInAsGuest,
         logout,
       }}

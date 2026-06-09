@@ -1,20 +1,30 @@
-// Central design tokens used across the app.
+// Central design tokens used across the app. Brand theme: Indigo / Blue / Cyan.
 export const colors = {
-  bg: '#0F1115',
-  card: '#1A1D24',
-  cardAlt: '#22262F',
-  border: '#2C313C',
-  primary: '#5B8CFF',
-  primaryDark: '#3D6BE0',
-  text: '#F2F4F8',
-  textMuted: '#9BA3B2',
-  danger: '#FF5C5C',
-  success: '#37C978',
-  warning: '#FFB020',
+  bg: '#0F172A', // Dark Slate
+  card: '#1E293B', // Card surface
+  cardAlt: '#334155',
+  border: '#334155',
+  primary: '#4F46E5', // Indigo
+  primaryDark: '#4338CA',
+  secondary: '#3B82F6', // Blue
+  accent: '#06B6D4', // Cyan
+  text: '#F8FAFC',
+  textMuted: '#94A3B8',
+  danger: '#EF4444',
+  success: '#10B981',
+  warning: '#F59E0B',
   instagram: '#E1306C',
   linkedin: '#0A66C2',
-  link: '#5B8CFF',
-  note: '#37C978',
+  link: '#3B82F6',
+  note: '#10B981',
+};
+
+// Brand gradient (135°): Indigo → Blue → Cyan. Use with expo-linear-gradient.
+export const gradient = {
+  colors: ['#4F46E5', '#3B82F6', '#06B6D4'],
+  // 135deg ≈ top-left to bottom-right
+  start: { x: 0, y: 0 },
+  end: { x: 1, y: 1 },
 };
 
 export const spacing = {

@@ -34,13 +34,25 @@
           "color": "#5B8CFF"
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "Allow JasminOs to pick a contact for your follow-ups."
+        }
+      ]
     ],
     "extra": {
       "eas": {
         "projectId": "aafb3621-d312-4a63-bfe2-79e5aac7aa1e"
       }
     },
-    "owner": "jasmin"
+    "owner": "jasmin",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/aafb3621-d312-4a63-bfe2-79e5aac7aa1e"
+    }
   }
 }

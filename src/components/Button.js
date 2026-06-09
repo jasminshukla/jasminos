@@ -1,6 +1,7 @@
 import React from 'react';
 import { Text, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
-import { colors, radius, spacing } from '../theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import { colors, radius, spacing, gradient } from '../theme';
 
 export default function Button({
   title,
@@ -12,6 +13,39 @@ export default function Button({
 }) {
   const isGhost = variant === 'ghost';
   const isDanger = variant === 'danger';
+  const isPrimary = !isGhost && !isDanger;
+
+  const content = loading ? (
+    <ActivityIndicator color={isGhost ? colors.primary : '#fff'} />
+  ) : (
+    <Text style={[styles.text, isGhost && styles.ghostText]}>{title}</Text>
+  );
+
+  // Primary buttons use the brand gradient (Indigo → Blue → Cyan).
+  if (isPrimary) {
+    return (
+      <Pressable
+        onPress={onPress}
+        disabled={disabled || loading}
+        style={({ pressed }) => [
+          styles.wrapper,
+          (disabled || loading) && styles.disabled,
+          pressed && { opacity: 0.9 },
+          style,
+        ]}
+      >
+        <LinearGradient
+          colors={gradient.colors}
+          start={gradient.start}
+          end={gradient.end}
+          style={styles.inner}
+        >
+          {content}
+        </LinearGradient>
+      </Pressable>
+    );
+  }
+
   return (
     <Pressable
       onPress={onPress}
@@ -25,16 +59,19 @@ export default function Button({
         style,
       ]}
     >
-      {loading ? (
-        <ActivityIndicator color={isGhost ? colors.primary : '#fff'} />
-      ) : (
-        <Text style={[styles.text, isGhost && styles.ghostText]}>{title}</Text>
-      )}
+      {content}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
+  wrapper: { borderRadius: radius.md, overflow: 'hidden' },
+  inner: {
+    paddingVertical: spacing.md + 2,
+    paddingHorizontal: spacing.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   base: {
     backgroundColor: colors.primary,
     paddingVertical: spacing.md + 2,

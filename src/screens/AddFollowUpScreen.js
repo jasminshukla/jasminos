@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import * as Contacts from 'expo-contacts';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import { useStore } from '../context/StoreContext';
@@ -33,29 +34,46 @@ export default function AddFollowUpScreen({ navigation }) {
       setShowPicker(false);
       return;
     }
-    if (Platform.OS === 'android' && pickerMode === 'date') {
-      // After choosing the date on Android, chain into the time picker.
-      const base = selected || new Date();
-      setRemindAt(base.getTime());
-      setPickerMode('time');
-      setShowPicker(true);
-      return;
-    }
-    if (selected) {
-      const base = remindAt ? new Date(remindAt) : new Date();
-      if (pickerMode === 'time') {
+    if (Platform.OS === 'android') {
+      if (pickerMode === 'date') {
+        // After choosing the date on Android, chain into the time picker.
+        const base = selected || new Date();
+        setRemindAt(base.getTime());
+        setPickerMode('time');
+        setShowPicker(true);
+        return;
+      }
+      // Time chosen — combine with the previously chosen date.
+      if (selected) {
+        const base = remindAt ? new Date(remindAt) : new Date();
         base.setHours(selected.getHours(), selected.getMinutes(), 0, 0);
         setRemindAt(base.getTime());
-      } else {
-        setRemindAt(selected.getTime());
       }
+      setShowPicker(false);
+      return;
     }
-    setShowPicker(false);
+    // iOS: a single 'datetime' spinner picks both date & time. Update live and
+    // keep it open until the user taps Done.
+    if (selected) setRemindAt(selected.getTime());
   }
 
   function openCustomPicker() {
-    setPickerMode('date');
+    // iOS can pick date + time together; Android chains date -> time.
+    setPickerMode(Platform.OS === 'ios' ? 'datetime' : 'date');
     setShowPicker(true);
+  }
+
+  async function pickContact() {
+    try {
+      const c = await Contacts.presentContactPickerAsync();
+      if (!c) return; // user cancelled
+      const fullName =
+        c.name || [c.firstName, c.lastName].filter(Boolean).join(' ').trim();
+      const phone = c.phoneNumbers?.[0]?.number || '';
+      setContact(phone ? `${fullName} — ${phone}`.trim() : fullName);
+    } catch (e) {
+      Alert.alert('Could not open contacts', e.message);
+    }
   }
 
   async function onSave() {
@@ -87,8 +105,13 @@ export default function AddFollowUpScreen({ navigation }) {
           onChangeText={setTitle}
           placeholder="e.g. Call client about proposal"
         />
+        <View style={styles.contactRow}>
+          <Text style={styles.contactLabel}>Contact / who (optional)</Text>
+          <Pressable onPress={pickContact} style={styles.contactBtn}>
+            <Text style={styles.contactBtnText}>📇 Pick from contacts</Text>
+          </Pressable>
+        </View>
         <Input
-          label="Contact / who (optional)"
           value={contact}
           onChangeText={setContact}
           placeholder="e.g. Priya — +91 98xxxxxx"
@@ -135,12 +158,20 @@ export default function AddFollowUpScreen({ navigation }) {
         )}
 
         {showPicker && (
-          <DateTimePicker
-            value={remindAt ? new Date(remindAt) : new Date(Date.now() + 3600000)}
-            mode={pickerMode}
-            display="default"
-            onChange={onPickerChange}
-          />
+          <View style={styles.pickerWrap}>
+            <DateTimePicker
+              value={remindAt ? new Date(remindAt) : new Date(Date.now() + 3600000)}
+              mode={pickerMode}
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              minimumDate={new Date()}
+              onChange={onPickerChange}
+            />
+            {Platform.OS === 'ios' && (
+              <Pressable onPress={() => setShowPicker(false)} style={styles.doneBtn}>
+                <Text style={styles.doneText}>Done</Text>
+              </Pressable>
+            )}
+          </View>
         )}
 
         <Button title="Save follow-up" onPress={onSave} loading={saving} style={{ marginTop: spacing.lg }} />
@@ -184,4 +215,28 @@ const styles = StyleSheet.create({
   reminderWhen: { fontWeight: '800', color: colors.primary },
   clear: { color: colors.danger, fontWeight: '700', marginLeft: spacing.md },
   hint: { color: colors.textMuted, fontSize: 13, marginTop: spacing.lg },
+  contactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+  },
+  contactLabel: { color: colors.textMuted, fontSize: 13, fontWeight: '600' },
+  contactBtn: {
+    backgroundColor: colors.cardAlt,
+    borderRadius: radius.pill,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+  },
+  contactBtnText: { color: colors.primary, fontWeight: '700', fontSize: 13 },
+  pickerWrap: { marginTop: spacing.md },
+  doneBtn: {
+    alignSelf: 'flex-end',
+    backgroundColor: colors.primary,
+    borderRadius: radius.pill,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.xl,
+    marginTop: spacing.sm,
+  },
+  doneText: { color: '#fff', fontWeight: '700', fontSize: 14 },
 });
