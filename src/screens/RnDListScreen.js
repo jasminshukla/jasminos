@@ -10,6 +10,7 @@ import {
   Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ExternalLink, Share2, Pencil, Trash2, Plus, FlaskConical } from 'lucide-react-native';
 import { useStore } from '../context/StoreContext';
 import EmptyState from '../components/EmptyState';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -44,9 +45,8 @@ function RnDCard({ item, onEdit, onDelete }) {
     <View style={styles.card}>
       <View style={styles.cardTop}>
         <View style={[styles.tag, { backgroundColor: meta.color }]}>
-          <Text style={styles.tagText}>
-            {meta.icon} {meta.label}
-          </Text>
+          <meta.Icon color="#fff" size={12} />
+          <Text style={styles.tagText}>{meta.label}</Text>
         </View>
         <Text style={styles.date}>{formatDateTime(item.createdAt)}</Text>
       </View>
@@ -72,17 +72,21 @@ function RnDCard({ item, onEdit, onDelete }) {
       <View style={styles.actions}>
         {linky ? (
           <Pressable onPress={open} style={styles.actionBtn}>
-            <Text style={styles.actionText}>🔗 Open</Text>
+            <ExternalLink color={colors.text} size={15} />
+            <Text style={styles.actionText}>Open</Text>
           </Pressable>
         ) : null}
         <Pressable onPress={share} style={styles.actionBtn}>
-          <Text style={styles.actionText}>↗️ Share</Text>
+          <Share2 color={colors.text} size={15} />
+          <Text style={styles.actionText}>Share</Text>
         </Pressable>
         <Pressable onPress={() => onEdit(item)} style={styles.actionBtn}>
-          <Text style={styles.actionText}>✏️ Edit</Text>
+          <Pencil color={colors.text} size={15} />
+          <Text style={styles.actionText}>Edit</Text>
         </Pressable>
         <Pressable onPress={() => onDelete(item)} style={styles.actionBtn}>
-          <Text style={[styles.actionText, { color: colors.danger }]}>🗑️ Delete</Text>
+          <Trash2 color={colors.danger} size={15} />
+          <Text style={[styles.actionText, { color: colors.danger }]}>Delete</Text>
         </Pressable>
       </View>
     </View>
@@ -140,7 +144,7 @@ export default function RnDListScreen({ navigation }) {
         )}
         ListEmptyComponent={
           <EmptyState
-            icon="🧪"
+            Icon={FlaskConical}
             title="Your R&D vault is empty"
             subtitle="Tap + to paste an Instagram reel or LinkedIn post link, or save a free-text idea to revisit later."
           />
@@ -148,7 +152,7 @@ export default function RnDListScreen({ navigation }) {
       />
 
       <Pressable style={styles.fab} onPress={() => navigation.navigate('AddRnD')}>
-        <Text style={styles.fabText}>＋</Text>
+        <Plus color={colors.onPrimary} size={30} strokeWidth={2.5} />
       </Pressable>
 
       <ConfirmDialog
@@ -214,7 +218,14 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   cardTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  tag: { borderRadius: radius.pill, paddingVertical: 4, paddingHorizontal: spacing.md },
+  tag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    borderRadius: radius.pill,
+    paddingVertical: 4,
+    paddingHorizontal: spacing.md,
+  },
   tagText: { color: '#fff', fontSize: 12, fontWeight: '700' },
   date: { color: colors.textMuted, fontSize: 12 },
   title: { color: colors.text, fontSize: 16, fontWeight: '700', marginTop: spacing.md },
@@ -230,7 +241,7 @@ const styles = StyleSheet.create({
     borderTopColor: colors.border,
     paddingTop: spacing.md,
   },
-  actionBtn: {},
+  actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   actionText: { color: colors.text, fontSize: 13, fontWeight: '700' },
   fab: {
     position: 'absolute',
@@ -248,5 +259,4 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 6,
   },
-  fabText: { color: colors.onPrimary, fontSize: 32, marginTop: -2 },
 });

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text } from 'react-native';
+import { Bell, FlaskConical, User } from 'lucide-react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import FollowUpListScreen from '../screens/FollowUpListScreen';
@@ -56,9 +56,9 @@ function RndTab() {
   );
 }
 
-function tabIcon(emoji) {
-  return ({ focused }) => (
-    <Text style={{ fontSize: 22, opacity: focused ? 1 : 0.5 }}>{emoji}</Text>
+function tabIcon(Icon) {
+  return ({ color, focused }) => (
+    <Icon color={color} size={22} strokeWidth={focused ? 2.6 : 2} />
   );
 }
 
@@ -82,13 +82,13 @@ export default function AppTabs() {
       <Tab.Screen
         name="Follow-ups"
         component={FollowUpsTab}
-        options={{ tabBarIcon: tabIcon('🔔') }}
+        options={{ tabBarIcon: tabIcon(Bell) }}
       />
-      <Tab.Screen name="R&D" component={RndTab} options={{ tabBarIcon: tabIcon('🧪') }} />
+      <Tab.Screen name="R&D" component={RndTab} options={{ tabBarIcon: tabIcon(FlaskConical) }} />
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
-        options={{ tabBarIcon: tabIcon('👤') }}
+        options={{ tabBarIcon: tabIcon(User) }}
       />
     </Tab.Navigator>
   );

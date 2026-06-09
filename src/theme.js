@@ -1,3 +1,5 @@
+import { Camera, Briefcase, Link as LinkIcon, StickyNote } from 'lucide-react-native';
+
 // Central design tokens used across the app. Brand theme: aligned to
 // jasminshukla.com — warm orange on near-black with neutral grays.
 export const colors = {
@@ -45,10 +47,11 @@ export const radius = {
   pill: 999,
 };
 
-// Metadata for the kinds of R&D items the user can save.
+// Metadata for the kinds of R&D items the user can save. `Icon` is a
+// lucide-react-native component rendered wherever the type is shown.
 export const RND_TYPES = {
-  instagram: { label: 'Instagram', color: colors.instagram, icon: '📸' },
-  linkedin: { label: 'LinkedIn', color: colors.linkedin, icon: '💼' },
-  link: { label: 'Link', color: colors.link, icon: '🔗' },
-  note: { label: 'Note', color: colors.note, icon: '📝' },
+  instagram: { label: 'Instagram', color: colors.instagram, Icon: Camera },
+  linkedin: { label: 'LinkedIn', color: colors.linkedin, Icon: Briefcase },
+  link: { label: 'Link', color: colors.link, Icon: LinkIcon },
+  note: { label: 'Note', color: colors.note, Icon: StickyNote },
 };

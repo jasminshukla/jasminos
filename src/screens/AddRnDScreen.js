@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
+import { ClipboardPaste } from 'lucide-react-native';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import { useStore } from '../context/StoreContext';

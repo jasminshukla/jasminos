@@ -1,11 +1,15 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { Sparkles } from 'lucide-react-native';
 import { colors, spacing } from '../theme';
 
-export default function EmptyState({ icon = '✨', title, subtitle }) {
+// `Icon` is a lucide-react-native component (defaults to Sparkles).
+export default function EmptyState({ Icon = Sparkles, title, subtitle }) {
   return (
     <View style={styles.wrap}>
-      <Text style={styles.icon}>{icon}</Text>
+      <View style={styles.iconWrap}>
+        <Icon color={colors.primary} size={44} strokeWidth={1.5} />
+      </View>
       <Text style={styles.title}>{title}</Text>
       {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
     </View>
@@ -14,7 +18,7 @@ export default function EmptyState({ icon = '✨', title, subtitle }) {
 
 const styles = StyleSheet.create({
   wrap: { alignItems: 'center', paddingVertical: spacing.xxl * 2, paddingHorizontal: spacing.xl },
-  icon: { fontSize: 48, marginBottom: spacing.lg },
+  iconWrap: { marginBottom: spacing.lg },
   title: { color: colors.text, fontSize: 18, fontWeight: '700', textAlign: 'center' },
   subtitle: {
     color: colors.textMuted,

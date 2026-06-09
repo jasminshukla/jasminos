@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Bell, User, Pencil, Trash2, Plus, SquareCheckBig, Square } from 'lucide-react-native';
 import { useStore } from '../context/StoreContext';
 import { useAuth } from '../context/AuthContext';
 import EmptyState from '../components/EmptyState';
@@ -12,18 +13,30 @@ function FollowUpCard({ item, onToggle, onEdit, onDelete }) {
   const overdue = item.remindAt && !item.done && item.remindAt < Date.now();
   return (
     <View style={[styles.card, item.done && styles.cardDone]}>
-      <Pressable onPress={() => onToggle(item.id)} style={styles.checkbox}>
-        <Text style={styles.checkboxText}>{item.done ? '✅' : '⬜️'}</Text>
+      <Pressable onPress={() => onToggle(item.id)} style={styles.checkbox} hitSlop={6}>
+        {item.done ? (
+          <SquareCheckBig color={colors.primary} size={22} />
+        ) : (
+          <Square color={colors.textMuted} size={22} />
+        )}
       </Pressable>
       <View style={{ flex: 1 }}>
         <Text style={[styles.title, item.done && styles.strike]}>{item.title}</Text>
-        {item.contact ? <Text style={styles.contact}>👤 {item.contact}</Text> : null}
+        {item.contact ? (
+          <View style={styles.metaRow}>
+            <User color={colors.textMuted} size={13} />
+            <Text style={styles.contact}>{item.contact}</Text>
+          </View>
+        ) : null}
         {item.note ? <Text style={styles.note}>{item.note}</Text> : null}
         {item.remindAt ? (
           <View style={styles.reminderRow}>
-            <Text style={[styles.reminder, overdue && styles.overdue]}>
-              🔔 {formatDateTime(item.remindAt)}
-            </Text>
+            <View style={styles.reminderLeft}>
+              <Bell color={overdue ? colors.danger : colors.primary} size={13} />
+              <Text style={[styles.reminder, overdue && styles.overdue]}>
+                {formatDateTime(item.remindAt)}
+              </Text>
+            </View>
             <Text style={[styles.relative, overdue && styles.overdue]}>
               {overdue ? 'overdue' : formatRelative(item.remindAt)}
             </Text>
@@ -32,10 +45,10 @@ function FollowUpCard({ item, onToggle, onEdit, onDelete }) {
       </View>
       <View style={styles.cardActions}>
         <Pressable onPress={() => onEdit(item)} hitSlop={8}>
-          <Text style={styles.action}>✏️</Text>
+          <Pencil color={colors.textMuted} size={18} />
         </Pressable>
         <Pressable onPress={() => onDelete(item)} hitSlop={8}>
-          <Text style={styles.action}>🗑️</Text>
+          <Trash2 color={colors.danger} size={18} />
         </Pressable>
       </View>
     </View>
@@ -87,7 +100,7 @@ export default function FollowUpListScreen({ navigation }) {
         )}
         ListEmptyComponent={
           <EmptyState
-            icon="🔔"
+            Icon={Bell}
             title="No follow-ups yet"
             subtitle="Tap + to add one. Set a time and you'll get a push notification when it's due."
           />
@@ -95,7 +108,7 @@ export default function FollowUpListScreen({ navigation }) {
       />
 
       <Pressable style={styles.fab} onPress={() => navigation.navigate('AddFollowUp')}>
-        <Text style={styles.fabText}>＋</Text>
+        <Plus color={colors.onPrimary} size={30} strokeWidth={2.5} />
       </Pressable>
 
       <ConfirmDialog
@@ -145,10 +158,10 @@ const styles = StyleSheet.create({
   },
   cardDone: { opacity: 0.55 },
   checkbox: { paddingTop: 2 },
-  checkboxText: { fontSize: 20 },
   title: { color: colors.text, fontSize: 16, fontWeight: '700' },
   strike: { textDecorationLine: 'line-through', color: colors.textMuted },
-  contact: { color: colors.textMuted, fontSize: 13, marginTop: 2 },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 3 },
+  contact: { color: colors.textMuted, fontSize: 13 },
   note: { color: colors.textMuted, fontSize: 13, marginTop: spacing.xs, lineHeight: 18 },
   reminderRow: {
     flexDirection: 'row',
@@ -156,11 +169,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: spacing.sm,
   },
+  reminderLeft: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   reminder: { color: colors.primary, fontSize: 13, fontWeight: '600' },
   relative: { color: colors.textMuted, fontSize: 12 },
   overdue: { color: colors.danger },
   cardActions: { flexDirection: 'row', gap: spacing.md, alignItems: 'flex-start' },
-  action: { fontSize: 18 },
   fab: {
     position: 'absolute',
     right: spacing.xl,
@@ -177,5 +190,4 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 6,
   },
-  fabText: { color: colors.onPrimary, fontSize: 32, marginTop: -2 },
 });
