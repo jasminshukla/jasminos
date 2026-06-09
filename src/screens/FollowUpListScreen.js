@@ -1,13 +1,14 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, Pressable, Alert } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useStore } from '../context/StoreContext';
 import { useAuth } from '../context/AuthContext';
 import EmptyState from '../components/EmptyState';
+import ConfirmDialog from '../components/ConfirmDialog';
 import { colors, radius, spacing } from '../theme';
 import { formatDateTime, formatRelative } from '../lib/datetime';
 
-function FollowUpCard({ item, onToggle, onDelete }) {
+function FollowUpCard({ item, onToggle, onEdit, onDelete }) {
   const overdue = item.remindAt && !item.done && item.remindAt < Date.now();
   return (
     <View style={[styles.card, item.done && styles.cardDone]}>
@@ -29,9 +30,14 @@ function FollowUpCard({ item, onToggle, onDelete }) {
           </View>
         ) : null}
       </View>
-      <Pressable onPress={() => onDelete(item)} hitSlop={10}>
-        <Text style={styles.delete}>🗑️</Text>
-      </Pressable>
+      <View style={styles.cardActions}>
+        <Pressable onPress={() => onEdit(item)} hitSlop={8}>
+          <Text style={styles.action}>✏️</Text>
+        </Pressable>
+        <Pressable onPress={() => onDelete(item)} hitSlop={8}>
+          <Text style={styles.action}>🗑️</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -39,6 +45,7 @@ function FollowUpCard({ item, onToggle, onDelete }) {
 export default function FollowUpListScreen({ navigation }) {
   const { followups, toggleFollowupDone, deleteFollowup } = useStore();
   const { user } = useAuth();
+  const [toDelete, setToDelete] = useState(null);
 
   const { pending, done } = useMemo(() => {
     const sorted = [...followups].sort((a, b) => {
@@ -53,13 +60,6 @@ export default function FollowUpListScreen({ navigation }) {
   }, [followups]);
 
   const data = [...pending, ...done];
-
-  function confirmDelete(item) {
-    Alert.alert('Delete follow-up?', item.title, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => deleteFollowup(item.id) },
-    ]);
-  }
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -78,7 +78,12 @@ export default function FollowUpListScreen({ navigation }) {
         keyExtractor={(i) => i.id}
         contentContainerStyle={styles.list}
         renderItem={({ item }) => (
-          <FollowUpCard item={item} onToggle={toggleFollowupDone} onDelete={confirmDelete} />
+          <FollowUpCard
+            item={item}
+            onToggle={toggleFollowupDone}
+            onEdit={(it) => navigation.navigate('AddFollowUp', { editItem: it })}
+            onDelete={setToDelete}
+          />
         )}
         ListEmptyComponent={
           <EmptyState
@@ -92,6 +97,17 @@ export default function FollowUpListScreen({ navigation }) {
       <Pressable style={styles.fab} onPress={() => navigation.navigate('AddFollowUp')}>
         <Text style={styles.fabText}>＋</Text>
       </Pressable>
+
+      <ConfirmDialog
+        visible={!!toDelete}
+        title="Delete follow-up?"
+        message={toDelete?.title}
+        onCancel={() => setToDelete(null)}
+        onConfirm={() => {
+          deleteFollowup(toDelete.id);
+          setToDelete(null);
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -143,7 +159,8 @@ const styles = StyleSheet.create({
   reminder: { color: colors.primary, fontSize: 13, fontWeight: '600' },
   relative: { color: colors.textMuted, fontSize: 12 },
   overdue: { color: colors.danger },
-  delete: { fontSize: 18 },
+  cardActions: { flexDirection: 'row', gap: spacing.md, alignItems: 'flex-start' },
+  action: { fontSize: 18 },
   fab: {
     position: 'absolute',
     right: spacing.xl,
@@ -160,5 +177,5 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 6,
   },
-  fabText: { color: '#fff', fontSize: 32, marginTop: -2 },
+  fabText: { color: colors.onPrimary, fontSize: 32, marginTop: -2 },
 });

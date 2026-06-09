@@ -12,13 +12,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useStore } from '../context/StoreContext';
 import EmptyState from '../components/EmptyState';
+import ConfirmDialog from '../components/ConfirmDialog';
 import { colors, radius, spacing, RND_TYPES } from '../theme';
 import { formatDateTime } from '../lib/datetime';
 
 const FILTERS = ['all', 'instagram', 'linkedin', 'link', 'note'];
 const isUrl = (s) => /^https?:\/\//i.test((s || '').trim());
 
-function RnDCard({ item, onDelete }) {
+function RnDCard({ item, onEdit, onDelete }) {
   const meta = RND_TYPES[item.type] || RND_TYPES.note;
   const linky = isUrl(item.content);
 
@@ -76,6 +77,9 @@ function RnDCard({ item, onDelete }) {
         ) : null}
         <Pressable onPress={share} style={styles.actionBtn}>
           <Text style={styles.actionText}>↗️ Share</Text>
+        </Pressable>
+        <Pressable onPress={() => onEdit(item)} style={styles.actionBtn}>
+          <Text style={styles.actionText}>✏️ Edit</Text>
         </Pressable>
         <Pressable onPress={() => onDelete(item)} style={styles.actionBtn}>
           <Text style={[styles.actionText, { color: colors.danger }]}>🗑️ Delete</Text>

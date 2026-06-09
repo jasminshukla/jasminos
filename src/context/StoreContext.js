@@ -116,6 +116,32 @@ export function StoreProvider({ children }) {
     }
   }
 
+  async function updateFollowup(id, { title, note, contact, remindAt }) {
+    const target = followups.find((f) => f.id === id);
+    const ref = doc(db, 'users', user.id, 'followups', id);
+    const patch = {
+      title: title.trim(),
+      note: (note || '').trim(),
+      contact: (contact || '').trim(),
+      remindAt: remindAt || null,
+    };
+    const prevRemind = target?.remindAt || null;
+    const nextRemind = remindAt || null;
+    // Only touch the OS notification when the reminder time actually changed (or
+    // a reminder exists but was never scheduled). Otherwise leave it untouched.
+    if (prevRemind !== nextRemind || (nextRemind && !target?.notificationId)) {
+      if (target?.notificationId) await cancelReminder(target.notificationId);
+      patch.notificationId = nextRemind
+        ? await scheduleReminder({
+            title: `Follow-up: ${patch.title}`,
+            body: patch.note || patch.contact || 'Time to follow up.',
+            date: nextRemind,
+          })
+        : null;
+    }
+    await updateDoc(ref, patch);
+  }
+
   async function deleteFollowup(id) {
     const target = followups.find((f) => f.id === id);
     if (target?.notificationId) await cancelReminder(target.notificationId);
@@ -133,6 +159,15 @@ export function StoreProvider({ children }) {
     });
   }
 
+  async function updateRnd(id, { type, content, title, tags }) {
+    await updateDoc(doc(db, 'users', user.id, 'rnd', id), {
+      type: type || 'note',
+      title: (title || '').trim(),
+      content: (content || '').trim(),
+      tags: tags || [],
+    });
+  }
+
   async function deleteRnd(id) {
     await deleteDoc(doc(db, 'users', user.id, 'rnd', id));
   }
@@ -145,8 +180,10 @@ export function StoreProvider({ children }) {
         rnd,
         addFollowup,
         toggleFollowupDone,
+        updateFollowup,
         deleteFollowup,
         addRnd,
+        updateRnd,
         deleteRnd,
       }}
     >

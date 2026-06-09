@@ -31,7 +31,10 @@ function FollowUpsTab() {
       <FollowStack.Screen
         name="AddFollowUp"
         component={AddFollowUpScreen}
-        options={{ title: 'New follow-up', presentation: 'modal' }}
+        options={({ route }) => ({
+          title: route.params?.editItem ? 'Edit follow-up' : 'New follow-up',
+          presentation: 'modal',
+        })}
       />
     </FollowStack.Navigator>
   );
@@ -44,7 +47,10 @@ function RndTab() {
       <RndStack.Screen
         name="AddRnD"
         component={AddRnDScreen}
-        options={{ title: 'Save to R&D', presentation: 'modal' }}
+        options={({ route }) => ({
+          title: route.params?.editItem ? 'Edit R&D item' : 'Save to R&D',
+          presentation: 'modal',
+        })}
       />
     </RndStack.Navigator>
   );

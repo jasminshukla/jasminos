@@ -17,12 +17,14 @@ import { useStore } from '../context/StoreContext';
 import { colors, radius, spacing } from '../theme';
 import { formatDateTime, presetDates } from '../lib/datetime';
 
-export default function AddFollowUpScreen({ navigation }) {
-  const { addFollowup } = useStore();
-  const [title, setTitle] = useState('');
-  const [contact, setContact] = useState('');
-  const [note, setNote] = useState('');
-  const [remindAt, setRemindAt] = useState(null);
+export default function AddFollowUpScreen({ navigation, route }) {
+  const { addFollowup, updateFollowup } = useStore();
+  const editItem = route.params?.editItem || null;
+  const isEdit = !!editItem;
+  const [title, setTitle] = useState(editItem?.title || '');
+  const [contact, setContact] = useState(editItem?.contact || '');
+  const [note, setNote] = useState(editItem?.note || '');
+  const [remindAt, setRemindAt] = useState(editItem?.remindAt || null);
   const [showPicker, setShowPicker] = useState(false);
   const [pickerMode, setPickerMode] = useState('date');
   const [saving, setSaving] = useState(false);
@@ -81,13 +83,19 @@ export default function AddFollowUpScreen({ navigation }) {
       Alert.alert('Missing title', 'Give your follow-up a title.');
       return;
     }
-    if (remindAt && remindAt <= Date.now()) {
+    // Only enforce a future time when the reminder is new or has been changed —
+    // editing an already-overdue follow-up shouldn't force re-picking a time.
+    if (remindAt && remindAt <= Date.now() && remindAt !== editItem?.remindAt) {
       Alert.alert('Pick a future time', 'The reminder time must be in the future.');
       return;
     }
     setSaving(true);
     try {
-      await addFollowup({ title, contact, note, remindAt });
+      if (isEdit) {
+        await updateFollowup(editItem.id, { title, contact, note, remindAt });
+      } else {
+        await addFollowup({ title, contact, note, remindAt });
+      }
       navigation.goBack();
     } catch (e) {
       Alert.alert('Could not save', e.message);
@@ -174,7 +182,12 @@ export default function AddFollowUpScreen({ navigation }) {
           </View>
         )}
 
-        <Button title="Save follow-up" onPress={onSave} loading={saving} style={{ marginTop: spacing.lg }} />
+        <Button
+          title={isEdit ? 'Save changes' : 'Save follow-up'}
+          onPress={onSave}
+          loading={saving}
+          style={{ marginTop: spacing.lg }}
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -201,7 +214,7 @@ const styles = StyleSheet.create({
   chipCustom: { borderStyle: 'dashed' },
   chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   chipText: { color: colors.text, fontSize: 14, fontWeight: '600' },
-  chipTextActive: { color: '#fff' },
+  chipTextActive: { color: colors.onPrimary },
   reminderBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -238,5 +251,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     marginTop: spacing.sm,
   },
-  doneText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  doneText: { color: colors.onPrimary, fontWeight: '700', fontSize: 14 },
 });

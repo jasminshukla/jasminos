@@ -16,16 +16,19 @@ function detectType(text) {
   return 'note';
 }
 
-export default function AddRnDScreen({ navigation }) {
-  const { addRnd } = useStore();
-  const [content, setContent] = useState('');
-  const [title, setTitle] = useState('');
-  const [type, setType] = useState('note');
-  const [tagText, setTagText] = useState('');
+export default function AddRnDScreen({ navigation, route }) {
+  const { addRnd, updateRnd } = useStore();
+  const editItem = route.params?.editItem || null;
+  const isEdit = !!editItem;
+  const [content, setContent] = useState(editItem?.content || '');
+  const [title, setTitle] = useState(editItem?.title || '');
+  const [type, setType] = useState(editItem?.type || 'note');
+  const [tagText, setTagText] = useState((editItem?.tags || []).join(', '));
   const [saving, setSaving] = useState(false);
 
   // Re-detect type as the content changes (unless the user picked manually).
-  const [typeTouched, setTypeTouched] = useState(false);
+  // When editing, keep the item's saved type instead of auto-detecting over it.
+  const [typeTouched, setTypeTouched] = useState(isEdit);
   useEffect(() => {
     if (!typeTouched) setType(detectType(content));
   }, [content, typeTouched]);
@@ -50,7 +53,11 @@ export default function AddRnDScreen({ navigation }) {
         .split(',')
         .map((s) => s.trim())
         .filter(Boolean);
-      await addRnd({ type, content, title, tags });
+      if (isEdit) {
+        await updateRnd(editItem.id, { type, content, title, tags });
+      } else {
+        await addRnd({ type, content, title, tags });
+      }
       navigation.goBack();
     } catch (e) {
       Alert.alert('Could not save', e.message);
@@ -114,7 +121,7 @@ export default function AddRnDScreen({ navigation }) {
           autoCapitalize="none"
         />
 
-        <Button title="Save to R&D" onPress={onSave} loading={saving} />
+        <Button title={isEdit ? 'Save changes' : 'Save to R&D'} onPress={onSave} loading={saving} />
       </ScrollView>
     </SafeAreaView>
   );

@@ -1,27 +1,29 @@
-// Central design tokens used across the app. Brand theme: Indigo / Blue / Cyan.
+// Central design tokens used across the app. Brand theme: aligned to
+// jasminshukla.com — warm orange on near-black with neutral grays.
 export const colors = {
-  bg: '#0F172A', // Dark Slate
-  card: '#1E293B', // Card surface
-  cardAlt: '#334155',
-  border: '#334155',
-  primary: '#4F46E5', // Indigo
-  primaryDark: '#4338CA',
-  secondary: '#3B82F6', // Blue
-  accent: '#06B6D4', // Cyan
-  text: '#F8FAFC',
-  textMuted: '#94A3B8',
+  bg: '#000000', // Black
+  card: '#121212', // Card surface
+  cardAlt: '#1C1C1C', // Slightly raised surface (badges, reminder box)
+  border: '#323232',
+  primary: '#EB9944', // Brand orange
+  primaryDark: '#D07F2C',
+  secondary: '#EB9944',
+  accent: '#D07F2C',
+  text: '#F5F5F5',
+  textMuted: '#9A9A9A',
+  onPrimary: '#1A1208', // Dark text/icons that sit on top of the orange
   danger: '#EF4444',
   success: '#10B981',
   warning: '#F59E0B',
   instagram: '#E1306C',
   linkedin: '#0A66C2',
-  link: '#3B82F6',
-  note: '#10B981',
+  link: '#EB9944',
+  note: '#9A9A9A',
 };
 
-// Brand gradient (135°): Indigo → Blue → Cyan. Use with expo-linear-gradient.
+// Brand gradient (135°): orange → deep orange. Use with expo-linear-gradient.
 export const gradient = {
-  colors: ['#4F46E5', '#3B82F6', '#06B6D4'],
+  colors: ['#EB9944', '#D07F2C'],
   // 135deg ≈ top-left to bottom-right
   start: { x: 0, y: 0 },
   end: { x: 1, y: 1 },
