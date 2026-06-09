@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Bell, User, Pencil, Trash2, Plus, SquareCheckBig, Square } from 'lucide-react-native';
+import { Bell, User, Pencil, Trash2, Plus, SquareCheckBig, Square, Hand } from 'lucide-react-native';
 import { useStore } from '../context/StoreContext';
 import { useAuth } from '../context/AuthContext';
 import EmptyState from '../components/EmptyState';
@@ -78,7 +78,10 @@ export default function FollowUpListScreen({ navigation }) {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.greeting}>Hi {user?.name?.split(' ')[0]} 👋</Text>
+          <View style={styles.greetingRow}>
+            <Text style={styles.greeting}>Hi {user?.name?.split(' ')[0]}</Text>
+            <Hand color={colors.textMuted} size={14} />
+          </View>
           <Text style={styles.heading}>Follow-ups</Text>
         </View>
         <View style={styles.badge}>
@@ -135,6 +138,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
     paddingBottom: spacing.lg,
   },
+  greetingRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   greeting: { color: colors.textMuted, fontSize: 14 },
   heading: { color: colors.text, fontSize: 26, fontWeight: '800' },
   badge: {

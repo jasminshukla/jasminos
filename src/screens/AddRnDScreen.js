@@ -86,9 +86,10 @@ export default function AddRnDScreen({ navigation, route }) {
                   active && { backgroundColor: meta.color, borderColor: meta.color },
                 ]}
               >
-                <Text style={[styles.typeText, active && { color: '#fff' }]}>
-                  {meta.icon} {meta.label}
-                </Text>
+                <View style={styles.typeChipInner}>
+                  <meta.Icon color={active ? '#fff' : colors.text} size={15} />
+                  <Text style={[styles.typeText, active && { color: '#fff' }]}>{meta.label}</Text>
+                </View>
               </Pressable>
             );
           })}
@@ -97,7 +98,8 @@ export default function AddRnDScreen({ navigation, route }) {
         <View style={styles.pasteRow}>
           <Text style={styles.sectionLabel}>Link or text</Text>
           <Pressable onPress={pasteFromClipboard} style={styles.pasteBtn}>
-            <Text style={styles.pasteText}>📋 Paste</Text>
+            <ClipboardPaste color={colors.primary} size={14} />
+            <Text style={styles.pasteText}>Paste</Text>
           </Pressable>
         </View>
         <Input
@@ -141,9 +143,13 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.lg,
   },
+  typeChipInner: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   typeText: { color: colors.text, fontSize: 14, fontWeight: '600' },
   pasteRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   pasteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
     backgroundColor: colors.cardAlt,
     borderRadius: radius.pill,
     paddingVertical: spacing.xs,

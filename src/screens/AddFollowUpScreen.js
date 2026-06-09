@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Contacts from 'expo-contacts';
+import { Contact, Calendar, Bell } from 'lucide-react-native';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import { useStore } from '../context/StoreContext';
@@ -116,7 +117,8 @@ export default function AddFollowUpScreen({ navigation, route }) {
         <View style={styles.contactRow}>
           <Text style={styles.contactLabel}>Contact / who (optional)</Text>
           <Pressable onPress={pickContact} style={styles.contactBtn}>
-            <Text style={styles.contactBtnText}>📇 Pick from contacts</Text>
+            <Contact color={colors.primary} size={14} />
+            <Text style={styles.contactBtnText}>Pick from contacts</Text>
           </Pressable>
         </View>
         <Input
@@ -147,14 +149,18 @@ export default function AddFollowUpScreen({ navigation, route }) {
             );
           })}
           <Pressable onPress={openCustomPicker} style={[styles.chip, styles.chipCustom]}>
-            <Text style={styles.chipText}>📅 Custom…</Text>
+            <View style={styles.chipInner}>
+              <Calendar color={colors.text} size={14} />
+              <Text style={styles.chipText}>Custom…</Text>
+            </View>
           </Pressable>
         </View>
 
         {remindAt ? (
           <View style={styles.reminderBox}>
+            <Bell color={colors.primary} size={18} />
             <Text style={styles.reminderText}>
-              🔔 You'll get a push notification {'\n'}
+              You'll get a push notification {'\n'}
               <Text style={styles.reminderWhen}>{formatDateTime(remindAt)}</Text>
             </Text>
             <Pressable onPress={() => setRemindAt(null)}>
@@ -212,13 +218,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
   },
   chipCustom: { borderStyle: 'dashed' },
+  chipInner: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   chipText: { color: colors.text, fontSize: 14, fontWeight: '600' },
   chipTextActive: { color: colors.onPrimary },
   reminderBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: spacing.md,
     backgroundColor: colors.cardAlt,
     borderRadius: radius.md,
     padding: spacing.lg,
@@ -236,6 +243,9 @@ const styles = StyleSheet.create({
   },
   contactLabel: { color: colors.textMuted, fontSize: 13, fontWeight: '600' },
   contactBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
     backgroundColor: colors.cardAlt,
     borderRadius: radius.pill,
     paddingVertical: spacing.xs,

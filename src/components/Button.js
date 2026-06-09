@@ -24,7 +24,7 @@ export default function Button({
     </Text>
   );
 
-  // Primary buttons use the brand gradient (Indigo → Blue → Cyan).
+  // Primary buttons use the brand gradient (orange → deep orange).
   if (isPrimary) {
     return (
       <Pressable
