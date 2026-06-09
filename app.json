@@ -6,7 +6,7 @@
     "scheme": "exporeactnative",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.jasminos",
@@ -17,7 +17,7 @@
     "android": {
       "package": "com.jasminos",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#000000",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -31,7 +31,7 @@
       [
         "expo-notifications",
         {
-          "color": "#5B8CFF"
+          "color": "#EB9944"
         }
       ],
       "expo-web-browser",

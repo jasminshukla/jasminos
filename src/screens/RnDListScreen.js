@@ -92,18 +92,12 @@ function RnDCard({ item, onEdit, onDelete }) {
 export default function RnDListScreen({ navigation }) {
   const { rnd, deleteRnd } = useStore();
   const [filter, setFilter] = useState('all');
+  const [toDelete, setToDelete] = useState(null);
 
   const data = useMemo(() => {
     if (filter === 'all') return rnd;
     return rnd.filter((r) => r.type === filter);
   }, [rnd, filter]);
-
-  function confirmDelete(item) {
-    Alert.alert('Delete this R&D item?', item.title || item.content, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => deleteRnd(item.id) },
-    ]);
-  }
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -137,7 +131,13 @@ export default function RnDListScreen({ navigation }) {
         data={data}
         keyExtractor={(i) => i.id}
         contentContainerStyle={styles.list}
-        renderItem={({ item }) => <RnDCard item={item} onDelete={confirmDelete} />}
+        renderItem={({ item }) => (
+          <RnDCard
+            item={item}
+            onEdit={(it) => navigation.navigate('AddRnD', { editItem: it })}
+            onDelete={setToDelete}
+          />
+        )}
         ListEmptyComponent={
           <EmptyState
             icon="🧪"
@@ -150,6 +150,17 @@ export default function RnDListScreen({ navigation }) {
       <Pressable style={styles.fab} onPress={() => navigation.navigate('AddRnD')}>
         <Text style={styles.fabText}>＋</Text>
       </Pressable>
+
+      <ConfirmDialog
+        visible={!!toDelete}
+        title="Delete this R&D item?"
+        message={toDelete?.title || toDelete?.content}
+        onCancel={() => setToDelete(null)}
+        onConfirm={() => {
+          deleteRnd(toDelete.id);
+          setToDelete(null);
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -192,7 +203,7 @@ const styles = StyleSheet.create({
   },
   filterActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   filterText: { color: colors.textMuted, fontSize: 13, fontWeight: '600' },
-  filterTextActive: { color: '#fff' },
+  filterTextActive: { color: colors.onPrimary },
   list: { paddingHorizontal: spacing.xl, paddingBottom: 120 },
   card: {
     backgroundColor: colors.card,
@@ -237,5 +248,5 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 6,
   },
-  fabText: { color: '#fff', fontSize: 32, marginTop: -2 },
+  fabText: { color: colors.onPrimary, fontSize: 32, marginTop: -2 },
 });

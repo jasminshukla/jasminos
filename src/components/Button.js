@@ -15,10 +15,13 @@ export default function Button({
   const isDanger = variant === 'danger';
   const isPrimary = !isGhost && !isDanger;
 
+  const indicatorColor = isGhost ? colors.primary : isPrimary ? colors.onPrimary : '#fff';
   const content = loading ? (
-    <ActivityIndicator color={isGhost ? colors.primary : '#fff'} />
+    <ActivityIndicator color={indicatorColor} />
   ) : (
-    <Text style={[styles.text, isGhost && styles.ghostText]}>{title}</Text>
+    <Text style={[styles.text, isPrimary && styles.primaryText, isGhost && styles.ghostText]}>
+      {title}
+    </Text>
   );
 
   // Primary buttons use the brand gradient (Indigo → Blue → Cyan).
@@ -88,5 +91,6 @@ const styles = StyleSheet.create({
   danger: { backgroundColor: colors.danger },
   disabled: { opacity: 0.5 },
   text: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  primaryText: { color: colors.onPrimary },
   ghostText: { color: colors.primary },
 });

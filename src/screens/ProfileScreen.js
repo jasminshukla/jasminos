@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: spacing.lg,
   },
-  avatarText: { color: '#fff', fontSize: 36, fontWeight: '800' },
+  avatarText: { color: colors.onPrimary, fontSize: 36, fontWeight: '800' },
   name: { color: colors.text, fontSize: 22, fontWeight: '800' },
   email: { color: colors.textMuted, fontSize: 14, marginTop: spacing.xs },
   stats: {
