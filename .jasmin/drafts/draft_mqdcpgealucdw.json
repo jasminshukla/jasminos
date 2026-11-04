@@ -1,0 +1,9 @@
+{
+  "id": "draft_mqdcpgealucdw",
+  "taskId": "task_mqdbxtqzcy13a",
+  "title": "Extract deriveBalances + monthTotals into src/lib/balances.js",
+  "content": "Create src/lib/balances.js with two pure functions, then refactor WalletScreen to use them with identical behavior.\n\nderiveBalances(accounts, transactions) -> { totalOnHand, accountBalances }\n  - seed accountBalances[a.id] = Number(a.openingBalance)||0, accumulate opening sum\n  - for each tx: signed = type==='income' ? +amt : -amt; net += signed; if accountId present in balances, add signed there\n  - totalOnHand = opening + net\n\nmonthTotals(transactions, ref = Date.now()) -> { income, expense }\n  - monthStart = first of ref's month; sum amounts where (occurredAt||createdAt) >= monthStart, split by type\n\nWalletScreen: replace the single combined useMemo with deriveBalances(accounts,transactions) (memo on [accounts,transactions]) and monthTotals(transactions) (memo on [transactions]); rename destructured income/expense to monthIncome/monthExpense.",
+  "notes": "Behavior parity: same Number()||0 coercion, same signed convention, same occurredAt||createdAt fallback, same month-start boundary. Splitting into two functions (vs the original single pass) is a negligible second loop but makes each unit-testable and lets the Insights screen reuse them. ref defaults to Date.now() so tests can pin a deterministic month. Category breakdown helper is intentionally deferred to the Insights task.",
+  "createdAt": "2026-06-14T05:35:54.179Z",
+  "updatedAt": "2026-06-14T05:35:54.179Z"
+}

@@ -1,0 +1,100 @@
+[
+  {
+    "id": "chg_mqdcmbau83cbf",
+    "summary": "deleteAccount now cascades: reassigns the account's transactions to Unassigned, then deletes the account, atomically",
+    "detail": "src/context/StoreContext.js: imported writeBatch from @firebase/firestore. Rewrote deleteAccount(id) to filter transactions with accountId===id from local store state, batch.update each to {accountId:null}, batch.delete the account doc, and commit in one writeBatch. Fixes the dangling-accountId bug where deleting an account orphaned its transactions (dropped from per-account balances while still affecting the headline total).",
+    "taskId": "task_mqdbxtqobo0k6",
+    "createdAt": "2026-06-14T05:33:27.607Z"
+  },
+  {
+    "id": "chg_mqdcorofsxrhq",
+    "summary": "Rewrote firestore.rules into explicit per-collection owner-scoped matches with shape validation for accounts & transactions",
+    "detail": "firestore.rules: replaced the single permissive wildcard match (/users/{userId}/{collection}/{docId}) with explicit matches under /users/{userId} and an isOwner() helper. followups & rnd keep read,write if owner. accounts and transactions split read,delete (owner-only) from create,update (owner + shape: accounts require name:string & openingBalance:number; transactions require amount:number & type in [income,expense]). The wildcard was removed deliberately so validated rules aren't overridden by OR semantics; unlisted collections now default-deny. tasks rules deferred to the tasks-rules task.",
+    "taskId": "task_mqdbxtqwesedb",
+    "createdAt": "2026-06-14T05:35:22.143Z"
+  },
+  {
+    "id": "chg_mqdcq5g6k50gq",
+    "summary": "Extracted balance/month-summary math into pure src/lib/balances.js; WalletScreen now consumes it",
+    "detail": "New src/lib/balances.js exports deriveBalances(accounts, transactions) -> {totalOnHand, accountBalances} and monthTotals(transactions, ref=Date.now()) -> {income, expense}, both null-safe and React/Firestore-free. WalletScreen.js: imported them and replaced the inlined combined useMemo with two memos (deriveBalances on [accounts,transactions], monthTotals on [transactions]); behavior unchanged. Enables unit testing and reuse by the Insights screen.",
+    "taskId": "task_mqdbxtqzcy13a",
+    "createdAt": "2026-06-14T05:36:26.646Z"
+  },
+  {
+    "id": "chg_mqdcul20yngzj",
+    "summary": "Added jest-expo test setup and 20 passing unit tests for money.js and balances.js",
+    "detail": "package.json: added test script (jest), jest config (preset jest-expo, ignore node_modules), and devDependencies jest-expo ~54 + jest ^29 (installed, 223 pkgs). New src/lib/__tests__/money.test.js (formatMoney grouping/decimals/sign/coercion; parseAmount stripping incl. documented '-50'->50) and balances.test.js (deriveBalances opening/assigned/unassigned/unknown-account/coercion/null-safety; monthTotals month-boundary >=, createdAt fallback, exclusion, null-safety). `npm test`: 2 suites, 20 tests, all passing.",
+    "taskId": "task_mqdbxtr2hxhf6",
+    "createdAt": "2026-06-14T05:39:53.496Z"
+  },
+  {
+    "id": "chg_mqdcv9moagnow",
+    "summary": "Added owner-scoped, shape-validated firestore rules for the tasks collection",
+    "detail": "firestore.rules: added match /tasks/{docId} under /users/{userId}. read,delete require isOwner(); create,update require isOwner() && title is string && title.size() > 0 && done is bool. Follows the established no-wildcard, read/delete-split-from-create/update structure so deletes pass and partial updates (merged full doc) still satisfy checks.",
+    "taskId": "task_mqdc8iemzmqri",
+    "createdAt": "2026-06-14T05:40:25.344Z"
+  },
+  {
+    "id": "chg_mqdcwcavho74f",
+    "summary": "Added tasks collection subscription + CRUD (add/update/toggleDone/delete) to StoreContext",
+    "detail": "src/context/StoreContext.js: added tasks state, setTasks([]) on logout, tasks:false in the markReady map, subscribe('tasks', setTasks) in unsubs. New addTask({title,note,priority}) writes {title,note,priority||'medium',done:false,createdAt}; updateTask edits title/note/priority only (never done); toggleTaskDone flips done from local state; deleteTask removes the doc. Exposed tasks + the four fns in the context value. Field shape matches the firestore.rules tasks block.",
+    "taskId": "task_mqdc8ifcrt6uu",
+    "createdAt": "2026-06-14T05:41:15.463Z"
+  },
+  {
+    "id": "chg_mqdcxjv98czjk",
+    "summary": "Added AddTaskScreen (create/edit) and TASK_PRIORITIES theme tokens",
+    "detail": "theme.js: added TASK_PRIORITIES {low,medium,high} (label+color) and getPriorityMeta() helper. New src/screens/AddTaskScreen.js: title Input (required, Alert if empty), multiline note Input, priority chip row (shared chip styling + colored dot), supports add/edit via route.params.editItem calling addTask/updateTask then navigation.goBack(). Deletion intentionally lives on the list screen, not the form.",
+    "taskId": "task_mqdc8ifemdfw2",
+    "createdAt": "2026-06-14T05:42:11.925Z"
+  },
+  {
+    "id": "chg_mqdcz33c9pfts",
+    "summary": "Added TaskListScreen and the pure partitionTasks helper",
+    "detail": "New src/lib/tasks.js: partitionTasks(tasks) -> {open, done} each newest-first by createdAt. New src/screens/TaskListScreen.js modeled on FollowUpListScreen: TaskCard with checkbox (toggleTaskDone, strike+dim when done), priority dot/label via getPriorityMeta, pencil-edit (navigate AddTask {editItem}), trash-delete via ConfirmDialog; useMemo partition (open then done), 'N open' badge, ListChecks EmptyState, + FAB to AddTask.",
+    "taskId": "task_mqdc8ifg70lmp",
+    "createdAt": "2026-06-14T05:43:23.496Z"
+  },
+  {
+    "id": "chg_mqdczvfofddub",
+    "summary": "Wired a Tasks tab (TaskList + AddTask modal) into AppTabs navigation",
+    "detail": "src/navigation/AppTabs.js: imported ListChecks, TaskListScreen, AddTaskScreen; added TasksStack navigator + TasksTab() (TaskList headerShown:false, AddTask as modal titled 'New task'/'Edit task' via route.params.editItem, shared stackScreenOptions). Registered <Tab.Screen name=\"Tasks\" icon=ListChecks> between Money and Follow-ups, giving five tabs.",
+    "taskId": "task_mqdc8ifhsk1v7",
+    "createdAt": "2026-06-14T05:44:00.228Z"
+  },
+  {
+    "id": "chg_mqdd1ft0a0yx4",
+    "summary": "Added a Loading spinner; Wallet & History now wait on store `ready` instead of flashing empty",
+    "detail": "New src/components/Loading.js (centered ActivityIndicator). WalletScreen.js and HistoryScreen.js: destructure `ready` from useStore and early-return <Loading/> inside their SafeAreaView (placed after all hooks to preserve hook order) until the first Firestore snapshot lands, then fall through to the existing list/EmptyState.",
+    "taskId": "task_mqdbxtr55kihh",
+    "createdAt": "2026-06-14T05:45:13.284Z"
+  },
+  {
+    "id": "chg_mqdd3jshf68h1",
+    "summary": "History screen now filters by type + account and searches note/category/account",
+    "detail": "HistoryScreen.js: added type segmented control (All/Income/Expense), an account chip row (All / each account / Unassigned), and a search TextInput. A useMemo filters transactions (type -> account -> case-insensitive search across note, category label, account name) before the unchanged day-grouping reducer. Controls live in the FlatList ListHeaderComponent (shown only when there are transactions). Active-filter summary 'N of M shown' + Clear button when any filter is non-default. EmptyState branches between 'No transactions yet' and 'No matches'. keyboardShouldPersistTaps handled.",
+    "taskId": "task_mqdbxtr8v9n0v",
+    "createdAt": "2026-06-14T05:46:51.761Z"
+  },
+  {
+    "id": "chg_mqdd6ae88yt3y",
+    "summary": "Added a spending Insights screen (this-month income/expense/net + category breakdown) reachable from Wallet",
+    "detail": "balances.js: added pure expenseByCategory(transactions, ref=Date.now()) -> sorted-desc [{category, amount, pct}] for the month. New src/screens/InsightsScreen.js: income/expense stat cards + net (via monthTotals) and a category breakdown (getCategoryMeta icon/color, amount, % of spend, proportional bar scaled to the top category) via expenseByCategory; EmptyState when no spend; ready-gated. AppTabs: registered MoneyStack 'Insights' screen. WalletScreen: added a 'View insights' footer in the balance card navigating to Insights (PieChart/ChevronRight). Added 3 expenseByCategory tests; npm test now 23/23.",
+    "taskId": "task_mqdbxtrcw4gc8",
+    "createdAt": "2026-06-14T05:48:59.552Z"
+  },
+  {
+    "id": "chg_mqdd98p9ntq33",
+    "summary": "Added Firebase deploy config (firebase.json + .firebaserc) so firestore rules can be deployed with one command",
+    "detail": "Created firebase.json (firestore.rules wired) and .firebaserc (default project tutorial-1534047433192, taken from the committed firebaseConfig). The actual `firebase deploy --only firestore:rules` is blocked: the Firebase CLI is installed but has no authorized account (firebase login:list -> none), and login is interactive/browser-based. The manual QA walkthrough requires a running app on device/simulator + a human. Both are out of scope for autonomous execution.",
+    "taskId": "task_mqdbxtrnkdosl",
+    "createdAt": "2026-06-14T05:51:17.325Z"
+  },
+  {
+    "id": "chg_mqddad9vw1h9r",
+    "summary": "Added partitionTasks unit tests (6 cases); suite now 29/29",
+    "detail": "New src/lib/__tests__/tasks.test.js covering partitionTasks: empty/undefined input, all-open, all-done, mixed split with newest-first ordering per group, stable sort on equal createdAt, and missing done flag treated as open. npm test: 3 suites, 29 tests, all passing.",
+    "taskId": "task_mqdc8ifkm59v2",
+    "createdAt": "2026-06-14T05:52:09.907Z"
+  }
+]

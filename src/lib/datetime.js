@@ -11,6 +11,18 @@ export function formatDateTime(ts) {
   });
 }
 
+// Date only (no time) — used for grouping the transaction history by day.
+export function formatDate(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return d.toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
 export function formatRelative(ts) {
   if (!ts) return '';
   const diff = ts - Date.now();

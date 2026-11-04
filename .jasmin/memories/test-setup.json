@@ -1,0 +1,11 @@
+{
+  "name": "test-setup",
+  "description": "Tests run via `npm test` (jest-expo preset); pure-fn specs live in src/lib/__tests__/",
+  "type": "reference",
+  "body": "The project uses jest with the jest-expo preset (configured in package.json \"jest\" key). Run `npm test`. Pure-function unit tests live alongside their module in src/lib/__tests__/*.test.js. money.js and balances.js are fully covered (20 tests). Note: jest writes PASS/FAIL to stderr, so PowerShell's NativeCommandError wrapper on the output is benign — read the summary line. parseAmount strips all non-[0-9.] chars, so negative strings become positive (locked by test). When adding a pure helper (e.g. src/lib/tasks.js), add a sibling __tests__ spec.",
+  "links": [
+    "balances-lib"
+  ],
+  "createdAt": "2026-06-14T05:39:57.702Z",
+  "updatedAt": "2026-06-14T05:39:57.702Z"
+}

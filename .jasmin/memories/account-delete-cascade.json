@@ -1,0 +1,9 @@
+{
+  "name": "account-delete-cascade",
+  "description": "Deleting a wallet account reassigns its transactions to Unassigned (accountId=null) atomically, never deletes them",
+  "type": "architecture",
+  "body": "StoreContext.deleteAccount uses a Firestore writeBatch: it sets accountId=null on every transaction with that accountId (from local `transactions` state), then deletes the account doc, committed atomically. Rationale: a transaction's signed amount counts toward totalOnHand regardless of account, so reassigning preserves both the spend history and the correct total; only the account's openingBalance leaves the total. The AddTransaction UI already supports the Unassigned state. Pattern to reuse for any future cascade in this store: derive affected docs from the already-subscribed local arrays rather than issuing a read query.",
+  "links": [],
+  "createdAt": "2026-06-14T05:33:34.919Z",
+  "updatedAt": "2026-06-14T05:33:34.919Z"
+}

@@ -1,0 +1,190 @@
+[
+  {
+    "id": "task_mqdbxtqobo0k6",
+    "title": "Fix account deletion to not orphan transactions",
+    "description": "In StoreContext.deleteAccount, transactions pointing at the deleted account are currently left with a dangling accountId — they vanish from per-account balances but still affect the headline total, and edit screens show a missing account. Make deletion cascade: in a single batched write, set accountId=null on every transaction referencing the account (preserving history as 'Unassigned') before deleting the account doc. Verify totalOnHand stays correct afterward.",
+    "status": "completed",
+    "priority": "critical",
+    "dependencies": [],
+    "category": "backend",
+    "createdAt": "2026-06-14T05:14:25.106Z",
+    "updatedAt": "2026-06-14T05:33:34.960Z",
+    "result": "Rewrote StoreContext.deleteAccount to cascade via writeBatch: affected transactions (accountId===id) are reassigned to {accountId:null} and the account doc is deleted in one atomic commit. Added writeBatch import. totalOnHand stays correct (signed amounts are account-agnostic; only the account's openingBalance leaves the total). No extra Firestore read needed — affected rows come from local store state."
+  },
+  {
+    "id": "task_mqdbxtqwesedb",
+    "title": "Add Firestore security rules for accounts & transactions",
+    "description": "The new users/{uid}/accounts and users/{uid}/transactions subcollections need rules matching the existing followups/rnd model: read/write allowed only when request.auth.uid == uid. Add/extend firestore.rules so a user can never read or mutate another user's wallet data, and validate basic shape (amount is number, type in {income,expense}).",
+    "status": "completed",
+    "priority": "high",
+    "dependencies": [],
+    "category": "database",
+    "createdAt": "2026-06-14T05:14:25.112Z",
+    "updatedAt": "2026-06-14T05:35:28.878Z",
+    "result": "Rewrote firestore.rules: explicit owner-scoped matches per collection with an isOwner() helper. accounts/transactions validate shape on create/update (accounts: name string + openingBalance number; transactions: amount number + type in income|expense), with read/delete split out so deletes and the Task-1 batch reassignment pass. Removed the permissive wildcard (OR semantics would have nullified validation); unlisted collections now default-deny. Not yet deployed — deployment is a separate roadmap task."
+  },
+  {
+    "id": "task_mqdbxtqzcy13a",
+    "title": "Extract balance & month-summary derivation into a reusable lib",
+    "description": "Move the per-account balance, totalOnHand, monthIncome/monthExpense reducer currently inlined in WalletScreen's useMemo into a pure module src/lib/balances.js (e.g. deriveBalances(accounts, transactions) and monthTotals(transactions, ref)). WalletScreen consumes the lib unchanged in behavior. This makes the logic unit-testable and reusable by the Insights screen.",
+    "status": "completed",
+    "priority": "high",
+    "dependencies": [],
+    "category": "architecture",
+    "createdAt": "2026-06-14T05:14:25.115Z",
+    "updatedAt": "2026-06-14T05:36:32.238Z",
+    "result": "Created src/lib/balances.js with pure deriveBalances(accounts, transactions) and monthTotals(transactions, ref=Date.now()). Refactored WalletScreen to import and use them via two useMemos in place of the inlined reducer — behavior identical (same coercion, signed convention, occurredAt||createdAt fallback, month boundary). Ready for unit tests and Insights reuse."
+  },
+  {
+    "id": "task_mqdbxtr2hxhf6",
+    "title": "Add unit tests for money.js and balances.js",
+    "description": "Add Jest (jest-expo) tests covering formatMoney (Indian grouping, sign option, round-number decimal drop, negatives) and parseAmount (currency/comma stripping, invalid/negative -> 0), plus deriveBalances/monthTotals edge cases: no accounts, unassigned transactions, opening balances, month boundary. Wire a test script in package.json.",
+    "status": "completed",
+    "priority": "high",
+    "dependencies": [
+      "task_mqdbxtqzcy13a"
+    ],
+    "category": "testing",
+    "createdAt": "2026-06-14T05:14:25.118Z",
+    "updatedAt": "2026-06-14T05:39:59.749Z",
+    "result": "Set up jest-expo (package.json: test script + jest preset + devDeps jest-expo~54/jest^29, installed). Added src/lib/__tests__/money.test.js and balances.test.js covering formatMoney/parseAmount and deriveBalances/monthTotals edge cases (no accounts, unassigned, unknown account, coercion, month boundary >=, createdAt fallback, null safety). npm test: 2 suites / 20 tests, all passing."
+  },
+  {
+    "id": "task_mqdbxtr55kihh",
+    "title": "Show loading state while the store hydrates",
+    "description": "The store exposes a `ready` flag that Wallet/History ignore, so they flash an empty state before the first Firestore snapshot arrives. Render a lightweight loading indicator (or skeleton) until ready is true on WalletScreen and HistoryScreen, then fall through to the existing EmptyState only when genuinely empty.",
+    "status": "completed",
+    "priority": "medium",
+    "dependencies": [],
+    "category": "frontend",
+    "createdAt": "2026-06-14T05:14:25.121Z",
+    "updatedAt": "2026-06-14T05:45:14.839Z",
+    "result": "Created src/components/Loading.js and gated WalletScreen + HistoryScreen on the store's `ready` flag: they render a centered spinner until hydration completes, eliminating the empty-state flash. Early returns placed after all hooks to keep hook order stable. EmptyState now only shows when genuinely empty."
+  },
+  {
+    "id": "task_mqdbxtr8v9n0v",
+    "title": "Add filtering & search to the History screen",
+    "description": "Let the user narrow the full transaction history by type (income/expense/all), category, and account, plus a free-text search over note/category. Keep the existing day-grouped FlatList; apply filters in a useMemo over transactions before the grouping pass. Show an active-filter summary and a clear-all affordance.",
+    "status": "completed",
+    "priority": "medium",
+    "dependencies": [],
+    "category": "frontend",
+    "createdAt": "2026-06-14T05:14:25.124Z",
+    "updatedAt": "2026-06-14T05:46:54.181Z",
+    "result": "HistoryScreen now supports type (All/Income/Expense segmented), account (chip row incl. Unassigned), and free-text search over note + category label + account name, applied in a useMemo before the day-grouping pass. Added active-filter summary ('N of M shown') with a Clear-all button, and a distinct 'No matches' empty state vs 'No transactions yet'. Category filtering is reachable via search by design (avoids a 16-label chip row)."
+  },
+  {
+    "id": "task_mqdbxtrcw4gc8",
+    "title": "Build a spending Insights view",
+    "description": "Add an Insights screen (reachable from the Wallet tab) that uses balances.js to show this-month income vs expense and a category breakdown (amount + % per expense category, sorted descending) with the existing category colors/icons. A simple proportional bar per category is enough — no charting dependency required unless trivial.",
+    "status": "completed",
+    "priority": "medium",
+    "dependencies": [],
+    "category": "frontend",
+    "createdAt": "2026-06-14T05:14:25.128Z",
+    "updatedAt": "2026-06-14T05:49:04.919Z",
+    "result": "Added InsightsScreen (income/expense/net stat cards + per-category expense breakdown with proportional bars, EmptyState, ready-gated) backed by a new pure balances.expenseByCategory helper. Wired into MoneyStack and reachable from a 'View insights' footer on WalletScreen's balance card. Added 3 helper tests; full suite green at 23/23."
+  },
+  {
+    "id": "task_mqdbxtrnkdosl",
+    "title": "Deploy Firestore rules and run a manual QA pass",
+    "description": "Deploy the updated firestore.rules and walk the full wallet flow on device/simulator: add account, add income & expense, edit, delete a transaction, delete an account (confirm transactions become Unassigned and totals stay correct), filter history, view insights. Capture any regressions as follow-up tasks.",
+    "status": "blocked",
+    "priority": "medium",
+    "dependencies": [],
+    "category": "deployment",
+    "createdAt": "2026-06-14T05:14:25.139Z",
+    "updatedAt": "2026-06-14T05:51:18.481Z",
+    "result": "BLOCKED on credentials + manual testing. Prep done: created firebase.json + .firebaserc (project tutorial-1534047433192) so deploy is one command. To finish: (1) `firebase login`, then (2) `firebase deploy --only firestore:rules` from the project root. (3) Manual QA on device/simulator: add account; add income & expense; edit a transaction; delete a transaction; delete an account and confirm its transactions become Unassigned and the headline total only drops by that account's opening balance; filter History by type/account/search; open Insights and verify the category breakdown. The deploy also publishes the tasks rules (same file). Cannot proceed autonomously: firebase CLI has no authorized account (login is interactive) and QA needs a human + running app."
+  },
+  {
+    "id": "task_mqdc8iemzmqri",
+    "title": "Add Firestore security rules for the tasks collection",
+    "description": "Add rules for users/{uid}/tasks matching the existing followups/rnd model in firestore.rules: read/write only when request.auth.uid == uid, so a user can never access another user's tasks. Validate basic shape (title is a non-empty string, done is a boolean).",
+    "status": "completed",
+    "priority": "high",
+    "dependencies": [],
+    "category": "database",
+    "createdAt": "2026-06-14T05:22:43.632Z",
+    "updatedAt": "2026-06-14T05:40:27.046Z",
+    "result": "Added a match /tasks/{docId} block to firestore.rules: owner-only read/delete; create/update require a non-empty string title and a boolean done. Consistent with the wallet collections' validated structure. Deployment handled by the tasks deploy/QA task."
+  },
+  {
+    "id": "task_mqdc8ifcrt6uu",
+    "title": "Add tasks CRUD to StoreContext",
+    "description": "Mirror the followups pattern in src/context/StoreContext.js: add a `tasks` state + an onSnapshot subscription on userCol(uid,'tasks') ordered by createdAt desc (include 'tasks' in the loaded/markReady map), and expose addTask({title, note, priority}), updateTask(id, {...}), toggleTaskDone(id) (flips the `done` boolean), and deleteTask(id). Store fields: title, note, priority, done:false, createdAt. Add all four to the context value. No reminder/notification logic needed.",
+    "status": "completed",
+    "priority": "high",
+    "dependencies": [],
+    "category": "backend",
+    "createdAt": "2026-06-14T05:22:43.656Z",
+    "updatedAt": "2026-06-14T05:41:21.391Z",
+    "result": "Added tasks support to StoreContext: state, logout reset, markReady entry, onSnapshot subscription, and addTask/updateTask/toggleTaskDone/deleteTask, all exposed via context. Mirrors the followups pattern; updateTask never touches done (toggleTaskDone owns completion). Doc shape {title,note,priority,done,createdAt} matches the tasks firestore rules."
+  },
+  {
+    "id": "task_mqdc8ifemdfw2",
+    "title": "Build AddTaskScreen (create & edit form)",
+    "description": "New src/screens/AddTaskScreen.js modeled on AddFollowUpScreen but simpler: Input for title (required), multiline Input for note (optional), and a priority chip row (low/medium/high) using the shared chip styles. Supports both add and edit via route.params.editItem, calling addTask/updateTask from the store, then navigation.goBack(). Validate that title is non-empty with an Alert.",
+    "status": "completed",
+    "priority": "high",
+    "dependencies": [
+      "task_mqdc8ifcrt6uu"
+    ],
+    "category": "frontend",
+    "createdAt": "2026-06-14T05:22:43.658Z",
+    "updatedAt": "2026-06-14T05:42:13.666Z",
+    "result": "Created src/screens/AddTaskScreen.js: required title (Alert on empty), optional multiline note, low/medium/high priority chips. Add/edit via route.params.editItem -> addTask/updateTask -> goBack. Added TASK_PRIORITIES + getPriorityMeta to theme.js for shared color/label tokens. Next screen (TaskList) will reuse these."
+  },
+  {
+    "id": "task_mqdc8ifg70lmp",
+    "title": "Build TaskListScreen (list, close, edit, delete)",
+    "description": "New src/screens/TaskListScreen.js modeled on FollowUpListScreen: a TaskCard with a checkbox to toggle closed (toggleTaskDone, strike-through + dimmed when done), a priority dot/label, pencil to edit (navigate AddTask with editItem), and trash to delete via ConfirmDialog. Partition into open vs done with useMemo (open first, then done), an 'N open' header badge, EmptyState when none, and a + FAB to navigate to AddTask.",
+    "status": "completed",
+    "priority": "high",
+    "dependencies": [
+      "task_mqdc8ifemdfw2"
+    ],
+    "category": "frontend",
+    "createdAt": "2026-06-14T05:22:43.660Z",
+    "updatedAt": "2026-06-14T05:43:25.953Z",
+    "result": "Created src/screens/TaskListScreen.js (checkbox close/reopen, priority dot, edit pencil, trash+ConfirmDialog delete, open/done partition, N-open badge, EmptyState, FAB) and extracted partitionTasks into src/lib/tasks.js for reuse/testing. Wiring into navigation is the next task."
+  },
+  {
+    "id": "task_mqdc8ifhsk1v7",
+    "title": "Wire a Tasks tab into AppTabs navigation",
+    "description": "In src/navigation/AppTabs.js add a TasksStack (TaskList headerShown:false + AddTask as a modal titled 'New task'/'Edit task' based on route.params.editItem, using the shared stackScreenOptions) and register it as a new Tab.Screen with a lucide icon (e.g. ListChecks or SquareCheckBig) via the existing tabIcon helper. Place it sensibly among the existing Money/Follow-ups/R&D/Profile tabs.",
+    "status": "completed",
+    "priority": "high",
+    "dependencies": [
+      "task_mqdc8ifg70lmp"
+    ],
+    "category": "frontend",
+    "createdAt": "2026-06-14T05:22:43.661Z",
+    "updatedAt": "2026-06-14T05:44:01.900Z",
+    "result": "Added TasksStack + TasksTab to AppTabs (TaskList + AddTask modal, shared stackScreenOptions, edit/new title) and registered a Tasks tab with the ListChecks icon between Money and Follow-ups. The Tasks module is now reachable end-to-end. Remaining: unit test partitionTasks, and deploy rules + QA."
+  },
+  {
+    "id": "task_mqdc8ifkm59v2",
+    "title": "Unit-test the task open/done partition & sort helper",
+    "description": "If the open-vs-done partition + sort logic is extracted into a small pure helper (e.g. src/lib/tasks.js partitionTasks), add a jest-expo test covering: empty input, all-open, all-done, mixed ordering (open before done), and stable sort by createdAt. Keep scope to the pure helper only.",
+    "status": "completed",
+    "priority": "low",
+    "dependencies": [],
+    "category": "testing",
+    "createdAt": "2026-06-14T05:22:43.664Z",
+    "updatedAt": "2026-06-14T05:52:10.913Z",
+    "result": "Added src/lib/__tests__/tasks.test.js (6 cases: empty/undefined, all-open, all-done, mixed open-before-done with newest-first, stable sort on equal createdAt, missing-done-as-open). Full suite green: 3 suites / 29 tests."
+  },
+  {
+    "id": "task_mqdc8ifm3yh2b",
+    "title": "Deploy tasks rules and run a manual QA pass",
+    "description": "Deploy the updated firestore.rules and walk the flow on device/simulator: add a task, edit it, toggle it closed and reopen, delete it via the confirm dialog, and confirm tasks are per-user (not visible across accounts). Capture any regressions as follow-up tasks.",
+    "status": "blocked",
+    "priority": "medium",
+    "dependencies": [],
+    "category": "deployment",
+    "createdAt": "2026-06-14T05:22:43.666Z",
+    "updatedAt": "2026-06-14T05:51:33.491Z",
+    "result": "BLOCKED on the same credentials + manual-testing constraints as the wallet deploy/QA task. The tasks rules are in the same firestore.rules, so a single `firebase login` + `firebase deploy --only firestore:rules` publishes them. Manual QA on device: add a task, edit it, toggle closed/reopen, delete via confirm dialog, and confirm tasks are per-user. firebase CLI has no authorized account (interactive login required); QA needs a human + running app."
+  }
+]

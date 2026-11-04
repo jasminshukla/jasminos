@@ -1,0 +1,18 @@
+# Draft: Jest-expo unit tests for money.js and balances.js
+
+> Task: `task_mqdbxtr2hxhf6`
+
+Set up jest-expo and add pure-function tests.
+
+package.json:
+- scripts.test = "jest"
+- jest config: { preset: "jest-expo" }
+- devDependencies: jest-expo (~54), jest (^29)
+
+Tests in src/lib/__tests__/:
+money.test.js — formatMoney: 0->₹0, 250->₹250, 1000->₹1,000, 100000->₹1,00,000, 123456.78->₹1,23,456.78 (Indian grouping), 1200.00 drops decimals, 1200.5->₹1,200.50, -500->−₹500, sign:true +250->'+ ₹250' / -250->'− ₹250', non-number->₹0. parseAmount: '1,200.50'->1200.5, '₹300'->300, 'abc'->0, ''->0, null->0, '-50'->50 (sign stripped — documents real behavior).
+balances.test.js — deriveBalances: empty->{0,{}}, opening-only sum, income+expense move account & total, unassigned tx counts to total only, unknown accountId counts to total only, undefined args safe, string openingBalance coerced. monthTotals: pin ref=June 15 2026; in-month included, prior-month excluded, monthStart boundary included (>=), createdAt fallback, empty->0/0, undefined safe.
+
+## Implementation Notes
+
+money.js and balances.js import nothing from react-native/expo, so jest-expo's babel transform handles them with no extra mocks. Using − (U+2212 MINUS SIGN) explicitly in assertions to match money.js's prefix char. Pinning monthTotals ref makes the month-boundary test deterministic regardless of run date. parseAmount('-50')===50 is asserted intentionally to lock the documented strip-then-parse behavior.

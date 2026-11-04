@@ -1,0 +1,53 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(npx expo-doctor 2>&1 | Select-Object -Last 30)",
+      "PowerShell(npx expo export --platform android --output-dir .bundle-check 2>&1 | Select-Object -Last 30)",
+      "Bash(npx expo-doctor *)",
+      "Bash(npx expo *)",
+      "WebSearch",
+      "Bash(npm install *)",
+      "Bash(npm -v)",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(npm view *)",
+      "Bash(node -e \"const e=require\\('./node_modules/firebase/package.json'\\).exports['./auth']; console.log\\(JSON.stringify\\(e,null,2\\)\\)\")",
+      "Bash(node -e \"const p=require\\('./node_modules/@firebase/auth/package.json'\\); console.log\\('react-native field:', p['react-native']\\); console.log\\('main:', p.main\\)\")",
+      "Bash(node -e \"const c=require\\('./node_modules/@expo/metro-config/package.json'\\); console.log\\('metro-config', c.version\\)\")",
+      "Bash(node ./node_modules/expo/bin/cli config --json)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(rm -f out.txt)",
+      "Bash(node -e \"try{const j=require\\('./app.json'\\);console.log\\('JSON OK'\\);console.log\\('plugins:',JSON.stringify\\(j.expo.plugins\\)\\);console.log\\('has extra.eas.projectId:',!!j.expo.extra?.eas?.projectId\\)}catch\\(e\\){console.log\\('JSON PARSE ERROR:',e.message\\)}\")",
+      "Bash(EXPO_DEBUG=1 npx expo config --type public)",
+      "Bash(node -e \"const fs=require\\('fs'\\);const j=JSON.parse\\(fs.readFileSync\\('./app.json','utf8'\\)\\);if\\(j.expo.extra&&j.expo.extra.eas&&j.expo.extra.eas.build\\){delete j.expo.extra.eas.build;console.log\\('removed extra.eas.build'\\);}else{console.log\\('no extra.eas.build found'\\);}console.log\\('kept projectId:',j.expo.extra?.eas?.projectId\\);console.log\\('owner:',j.expo.owner||'\\(none\\)'\\);fs.writeFileSync\\('./app.json',JSON.stringify\\(j,null,2\\)+'\\\\n'\\);\")",
+      "Bash(node -e \"const j=require\\('./app.json'\\);console.log\\(JSON.stringify\\(j.expo.extra?.eas?.build?.experimental?.ios?.appExtensions,null,2\\)\\)\")",
+      "Bash(sed -n '10,45p' node_modules/expo-share-intent/plugin/build/ios/withIosShareExtensionConfig.js)",
+      "Bash(node -e \"const j=require\\('./app.json'\\);const ex=j.expo.extra?.eas?.build?.experimental?.ios?.appExtensions;console.log\\('appExtensions:',ex?ex.length:0\\);const p=j.expo.plugins.find\\(p=>Array.isArray\\(p\\)&&p[0]==='expo-share-intent'\\);console.log\\('share-intent opts:',JSON.stringify\\(p&&p[1]\\)\\)\")",
+      "Bash(npx eas-cli *)",
+      "Bash(npx next *)",
+      "Bash(node -e ' *)",
+      "Bash(node -e \"const p=require\\('./package.json'\\).dependencies; console.log\\('lucide-react-native:', p['lucide-react-native']||'MISSING'\\); console.log\\('react-native-svg:', p['react-native-svg']||'MISSING'\\);\")",
+      "Bash(grep -iE '^\\(bell|user|pencil|trash-2|plus|calendar|clipboard|clipboard-paste|share-2|external-link|link|link-2|instagram|linkedin|sticky-note|flask-conical|check|check-square|square-check|square-check-big|square|contact|book-user|hand|sparkles\\)$')",
+      "Bash(grep -iE '^\\(instagram|linkedin|square-check-big|square-pen\\)$')",
+      "Bash(node -e \"const i=require\\('lucide-react-native/dist/cjs/lucide-react-native.js'\\); console.log\\(['Cigarette','Fuel','ShoppingCart','History'].map\\(n=>n+':'+\\(!!i[n]\\)\\).join\\('  '\\)\\)\")",
+      "mcp__plugin_jasmin_jasmin__jasmin_project_init",
+      "mcp__plugin_jasmin_jasmin__jasmin_roadmap_generate",
+      "mcp__plugin_jasmin_jasmin__jasmin_decision_log",
+      "mcp__plugin_jasmin_jasmin__jasmin_context",
+      "mcp__plugin_jasmin_jasmin__jasmin_task_next",
+      "mcp__plugin_jasmin_jasmin__jasmin_task_update",
+      "mcp__plugin_jasmin_jasmin__jasmin_memory_recall",
+      "mcp__plugin_jasmin_jasmin__jasmin_draft_create",
+      "mcp__plugin_jasmin_jasmin__jasmin_change_log",
+      "mcp__plugin_jasmin_jasmin__jasmin_memory_save",
+      "PowerShell(npm install *)",
+      "PowerShell(npm test *)",
+      "PowerShell($fb = \\(Get-Command firebase -ErrorAction SilentlyContinue\\); if \\($fb\\) { \"firebase CLI: $\\($fb.Source\\)\" } else { \"firebase CLI: NOT INSTALLED\" }; \"--- firebase.json ---\"; if \\(Test-Path \"firebase.json\"\\) { Get-Content firebase.json } else { \"no firebase.json\" }; \"--- .firebaserc ---\"; if \\(Test-Path \".firebaserc\"\\) { Get-Content .firebaserc } else { \"no .firebaserc\" }])",
+      "PowerShell(\"--- firebase login status ---\"; try { $r = firebase login:list 2>&1 | Out-String; $r.Trim\\(\\) } catch { \"login:list failed: $_\" })",
+      "mcp__plugin_jasmin_jasmin__jasmin_task_list"
+    ]
+  },
+  "enabledPlugins": {
+    "jasmin@jasmin-marketplace": true
+  }
+}

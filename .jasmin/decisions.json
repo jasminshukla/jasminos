@@ -1,0 +1,34 @@
+[
+  {
+    "id": "dec_mqdc4r9db5g1n",
+    "title": "On account deletion, reassign transactions to Unassigned rather than delete them",
+    "decision": "When a user deletes an account, set accountId=null on all of its transactions (so they show as 'Unassigned') instead of deleting those transaction records.",
+    "rationale": "The transaction history is the user's financial record and the headline total already counts unassigned transactions; deleting them would silently change the total and erase real spend history. Nulling the link preserves the audit trail and keeps totalOnHand correct. The AddTransaction UI already supports an 'Unassigned' state for income, so the data shape is already valid.",
+    "alternatives": "(a) Cascade-delete the account's transactions — rejected: destroys history and shifts the total. (b) Block deletion while transactions reference the account — rejected: poor UX, forces manual reassignment. (c) Leave the dangling accountId — rejected: this is the current bug.",
+    "createdAt": "2026-06-14T05:19:48.482Z"
+  },
+  {
+    "id": "dec_mqdc4rd0upu4m",
+    "title": "Derive balances on read in a pure lib; don't store running balances",
+    "decision": "Keep account balances computed from openingBalance + transactions at read time, extracted into a pure src/lib/balances.js, rather than persisting a maintained running balance field per account.",
+    "rationale": "Derive-on-read is already how WalletScreen works and it is self-correcting: edits, deletes, and reassignments can never desync a stored balance. Extracting it to a pure module makes it unit-testable and lets the Insights screen reuse the exact same math. The data volume (a single user's transactions) is tiny, so recomputation cost is negligible.",
+    "alternatives": "Maintain a denormalized balance field on each account doc, updated transactionally on every write — rejected: invites drift bugs, needs careful batched writes on every add/edit/delete, and buys no real performance at this scale.",
+    "createdAt": "2026-06-14T05:19:48.612Z"
+  },
+  {
+    "id": "dec_mqdc8t7d5f8db",
+    "title": "Tasks is a standalone module + tab, not folded into Follow-ups",
+    "decision": "Build Tasks/To-Do as its own Firestore subcollection (users/{uid}/tasks), its own screens (TaskList + AddTask), and its own bottom tab — parallel to Follow-ups rather than reusing the followups collection.",
+    "rationale": "Follow-ups are reminder/contact-centric (remindAt, push notifications, contact picker); a To-Do is intentionally simpler (title + note + priority + done). Overloading followups would force task rows to carry unused reminder fields and muddy both list UIs. A separate collection keeps each module's data shape and screen logic clean, and the followups pattern is proven enough to copy quickly.",
+    "alternatives": "(a) Add a 'kind' field to followups and filter — rejected: couples two features, complicates queries/rules. (b) Reuse Follow-ups UI with reminders hidden — rejected: dead fields and confusing UX.",
+    "createdAt": "2026-06-14T05:22:57.625Z"
+  },
+  {
+    "id": "dec_mqdc8wodk1c2q",
+    "title": "\"Close\" a task = toggle a reopenable `done` boolean",
+    "decision": "Closing a task flips a `done` boolean (open ↔ closed) and keeps the record; the task stays visible in a dimmed/strike-through 'done' section and can be reopened. Deletion is a separate, explicit action via the confirm dialog.",
+    "rationale": "Matches the existing Follow-ups mental model (toggleFollowupDone) so the whole app behaves consistently, and separates the reversible 'I finished this' action from the destructive 'remove it forever' action. Users can review what they completed instead of it vanishing on close.",
+    "alternatives": "Make 'close' immediately delete/archive out of view — rejected: conflates done with delete, loses the completed-work record, and diverges from Follow-ups.",
+    "createdAt": "2026-06-14T05:23:02.125Z"
+  }
+]

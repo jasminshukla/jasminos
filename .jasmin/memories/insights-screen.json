@@ -1,0 +1,11 @@
+{
+  "name": "insights-screen",
+  "description": "Insights screen lives in MoneyStack, reached from Wallet's balance-card footer; uses balances.expenseByCategory",
+  "type": "architecture",
+  "body": "src/screens/InsightsScreen.js shows this-month income/expense/net (balances.monthTotals) and a per-category expense breakdown (balances.expenseByCategory -> sorted-desc [{category, amount, pct}]) with proportional bars scaled to the largest category and getCategoryMeta colors/icons. Registered as MoneyStack 'Insights' in AppTabs; entry point is a 'View insights' footer in WalletScreen's balance card (navigation.navigate('Insights')). No charting dependency. Covered by tests in balances.test.js.",
+  "links": [
+    "balances-lib"
+  ],
+  "createdAt": "2026-06-14T05:49:03.297Z",
+  "updatedAt": "2026-06-14T05:49:03.297Z"
+}

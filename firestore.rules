@@ -1,11 +1,58 @@
 rules_version = '2';
 
-// Each user can only read/write their own follow-ups and R&D items, which live
-// under users/{uid}/...  Deploy with:  firebase deploy --only firestore:rules
+// Per-user data lives under users/{uid}/...  Every collection is owner-scoped:
+// a user can only read/write documents under their own uid. The wallet
+// collections (accounts, transactions) additionally validate basic document
+// shape on create/update. Deploy with:
+//   firebase deploy --only firestore:rules
+//
+// NOTE: rules are OR-ed across matching paths, so there is intentionally NO
+// permissive wildcard match here — that would override the validated wallet
+// rules below. Each collection is listed explicitly; anything unlisted is
+// denied by default. (The `tasks` collection gets its own block when that
+// module lands.)
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /users/{userId}/{collection}/{docId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    match /users/{userId} {
+      function isOwner() {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      // Follow-ups & R&D: per-user ownership, no extra shape constraints.
+      match /followups/{docId} {
+        allow read, write: if isOwner();
+      }
+      match /rnd/{docId} {
+        allow read, write: if isOwner();
+      }
+
+      // Accounts: a named holder with a numeric opening balance. read/delete is
+      // split from create/update so deletes (request.resource == null) pass.
+      match /accounts/{docId} {
+        allow read, delete: if isOwner();
+        allow create, update: if isOwner()
+          && request.resource.data.name is string
+          && request.resource.data.openingBalance is number;
+      }
+
+      // Transactions: a numeric amount and a known type. On update,
+      // request.resource.data is the merged full doc, so a partial reassignment
+      // (e.g. {accountId: null}) still satisfies these checks.
+      match /transactions/{docId} {
+        allow read, delete: if isOwner();
+        allow create, update: if isOwner()
+          && request.resource.data.amount is number
+          && request.resource.data.type in ['income', 'expense'];
+      }
+
+      // Tasks / To-Do: a non-empty title and a boolean done flag.
+      match /tasks/{docId} {
+        allow read, delete: if isOwner();
+        allow create, update: if isOwner()
+          && request.resource.data.title is string
+          && request.resource.data.title.size() > 0
+          && request.resource.data.done is bool;
+      }
     }
   }
 }

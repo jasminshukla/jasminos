@@ -40,7 +40,8 @@
         {
           "contactsPermission": "Allow JasminOs to pick a contact for your follow-ups."
         }
-      ]
+      ],
+      "expo-status-bar"
     ],
     "extra": {
       "eas": {

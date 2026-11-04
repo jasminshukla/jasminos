@@ -1,0 +1,11 @@
+{
+  "name": "tasks-store-api",
+  "description": "Tasks module store API: tasks array + addTask/updateTask/toggleTaskDone/deleteTask on useStore()",
+  "type": "architecture",
+  "body": "useStore() exposes `tasks` (array, ordered createdAt desc) and: addTask({title, note, priority}) — sets done:false, priority defaults 'medium'; updateTask(id, {title, note, priority}) — edits details only, never touches done; toggleTaskDone(id) — flips done using local state; deleteTask(id). Mirrors the followups pattern in StoreContext (subscription added to the markReady map + unsubs). Task doc shape: {title, note, priority, done, createdAt}. No reminders/notifications. Consumed by TaskListScreen (toggle/delete) and AddTaskScreen (add/update). Matches firestore.rules tasks validation (title non-empty string, done bool).",
+  "links": [
+    "firestore-rules-structure"
+  ],
+  "createdAt": "2026-06-14T05:41:19.707Z",
+  "updatedAt": "2026-06-14T05:41:19.707Z"
+}

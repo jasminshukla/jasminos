@@ -1,0 +1,11 @@
+{
+  "name": "firestore-rules-structure",
+  "description": "firestore.rules uses explicit per-collection owner-scoped matches (no wildcard) with shape validation on wallet writes",
+  "type": "architecture",
+  "body": "firestore.rules has NO permissive wildcard match — it enumerates each collection under /users/{userId} with an isOwner() helper, because Firestore rules are OR-ed and a wildcard would override validated rules. Pattern for adding a new collection (e.g. tasks): add a `match /<name>/{docId}` block; for validated ones split `allow read, delete: if isOwner()` from `allow create, update: if isOwner() && <shape checks>` so deletes (request.resource==null) aren't blocked. On update, request.resource.data is the merged full doc so partial updates still satisfy shape checks. Unlisted collections default-deny. Deploy: firebase deploy --only firestore:rules.",
+  "links": [
+    "account-delete-cascade"
+  ],
+  "createdAt": "2026-06-14T05:35:26.404Z",
+  "updatedAt": "2026-06-14T05:35:26.404Z"
+}

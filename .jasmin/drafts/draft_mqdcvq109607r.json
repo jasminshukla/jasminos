@@ -1,0 +1,9 @@
+{
+  "id": "draft_mqdcvq109607r",
+  "taskId": "task_mqdc8ifcrt6uu",
+  "title": "Wire tasks collection + CRUD into StoreContext",
+  "content": "Edits to src/context/StoreContext.js, mirroring followups/accounts:\n1. Add `const [tasks, setTasks] = useState([])`.\n2. In the no-user branch, add setTasks([]) before setReady(true).\n3. Add tasks:false to the `loaded` markReady map.\n4. Add subscribe('tasks', setTasks) to the unsubs array.\n5. Add CRUD near the transactions section:\n   - addTask({title, note, priority}) -> addDoc(tasks, { title.trim(), note.trim(), priority||'medium', done:false, createdAt: Date.now() })\n   - updateTask(id, {title, note, priority}) -> updateDoc(... { title.trim(), note.trim(), priority||'medium' }) (does not touch done)\n   - toggleTaskDone(id) -> find local task, updateDoc(... { done: !target.done })\n   - deleteTask(id) -> deleteDoc(...)\n6. Expose tasks + the four functions in the context value.",
+  "notes": "priority defaults to 'medium' to match the rules (done is bool, title non-empty). toggleTaskDone reads current value from local `tasks` state (store is the single subscriber) like toggleFollowupDone. updateTask intentionally omits `done` so editing title/note/priority never flips completion. No notification logic (unlike followups). Field shape matches firestore.rules tasks block: title (non-empty string), done (bool).",
+  "createdAt": "2026-06-14T05:40:46.596Z",
+  "updatedAt": "2026-06-14T05:40:46.596Z"
+}

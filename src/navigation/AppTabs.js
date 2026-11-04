@@ -1,17 +1,26 @@
 import React from 'react';
-import { Bell, FlaskConical, User } from 'lucide-react-native';
+import { Bell, FlaskConical, ListChecks, User, Wallet } from 'lucide-react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import FollowUpListScreen from '../screens/FollowUpListScreen';
 import AddFollowUpScreen from '../screens/AddFollowUpScreen';
 import RnDListScreen from '../screens/RnDListScreen';
 import AddRnDScreen from '../screens/AddRnDScreen';
+import WalletScreen from '../screens/WalletScreen';
+import HistoryScreen from '../screens/HistoryScreen';
+import InsightsScreen from '../screens/InsightsScreen';
+import AddTransactionScreen from '../screens/AddTransactionScreen';
+import AddAccountScreen from '../screens/AddAccountScreen';
+import TaskListScreen from '../screens/TaskListScreen';
+import AddTaskScreen from '../screens/AddTaskScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import { colors } from '../theme';
 
 const Tab = createBottomTabNavigator();
 const FollowStack = createNativeStackNavigator();
 const RndStack = createNativeStackNavigator();
+const MoneyStack = createNativeStackNavigator();
+const TasksStack = createNativeStackNavigator();
 
 const stackScreenOptions = {
   headerStyle: { backgroundColor: colors.bg },
@@ -56,6 +65,64 @@ function RndTab() {
   );
 }
 
+function MoneyTab() {
+  return (
+    <MoneyStack.Navigator screenOptions={stackScreenOptions}>
+      <MoneyStack.Screen name="Wallet" component={WalletScreen} options={{ headerShown: false }} />
+      <MoneyStack.Screen
+        name="History"
+        component={HistoryScreen}
+        options={{ title: 'Transaction history' }}
+      />
+      <MoneyStack.Screen
+        name="Insights"
+        component={InsightsScreen}
+        options={{ title: 'Insights' }}
+      />
+      <MoneyStack.Screen
+        name="AddTransaction"
+        component={AddTransactionScreen}
+        options={({ route }) => ({
+          title: route.params?.editItem
+            ? 'Edit transaction'
+            : route.params?.kind === 'income'
+              ? 'Add income'
+              : 'Add expense',
+          presentation: 'modal',
+        })}
+      />
+      <MoneyStack.Screen
+        name="AddAccount"
+        component={AddAccountScreen}
+        options={({ route }) => ({
+          title: route.params?.editItem ? 'Edit account' : 'Add account',
+          presentation: 'modal',
+        })}
+      />
+    </MoneyStack.Navigator>
+  );
+}
+
+function TasksTab() {
+  return (
+    <TasksStack.Navigator screenOptions={stackScreenOptions}>
+      <TasksStack.Screen
+        name="TaskList"
+        component={TaskListScreen}
+        options={{ headerShown: false }}
+      />
+      <TasksStack.Screen
+        name="AddTask"
+        component={AddTaskScreen}
+        options={({ route }) => ({
+          title: route.params?.editItem ? 'Edit task' : 'New task',
+          presentation: 'modal',
+        })}
+      />
+    </TasksStack.Navigator>
+  );
+}
+
 function tabIcon(Icon) {
   return ({ color, focused }) => (
     <Icon color={color} size={22} strokeWidth={focused ? 2.6 : 2} />
@@ -79,6 +146,8 @@ export default function AppTabs() {
         tabBarLabelStyle: { fontSize: 12, fontWeight: '700' },
       }}
     >
+      <Tab.Screen name="Money" component={MoneyTab} options={{ tabBarIcon: tabIcon(Wallet) }} />
+      <Tab.Screen name="Tasks" component={TasksTab} options={{ tabBarIcon: tabIcon(ListChecks) }} />
       <Tab.Screen
         name="Follow-ups"
         component={FollowUpsTab}

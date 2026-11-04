@@ -1,0 +1,11 @@
+{
+  "name": "balances-lib",
+  "description": "Wallet balance math lives in pure src/lib/balances.js (deriveBalances, monthTotals), reused by Wallet and Insights",
+  "type": "architecture",
+  "body": "src/lib/balances.js holds the wallet's money derivation as pure functions: deriveBalances(accounts, transactions) returns {totalOnHand, accountBalances} (totalOnHand = sum openingBalances + net of all signed tx amounts; unassigned tx count toward total but not any account), and monthTotals(transactions, ref=Date.now()) returns {income, expense} for ref's calendar month. Both null-safe. WalletScreen consumes both via useMemo. The Insights screen should reuse these rather than re-deriving. A category-breakdown helper is expected to be added here by the Insights task.",
+  "links": [
+    "account-delete-cascade"
+  ],
+  "createdAt": "2026-06-14T05:36:30.444Z",
+  "updatedAt": "2026-06-14T05:36:30.444Z"
+}

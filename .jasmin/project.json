@@ -1,0 +1,7 @@
+{
+  "name": "Jasmin OS — Personal Productivity App",
+  "goal": "Add a Tasks / To-Do module to the Expo React Native app: the user can add a task, mark it closed (done), and delete it — mirroring the existing Follow-ups and R&D modules, with per-user Firestore storage and its own tab. (This sits alongside the in-flight Wallet feature roadmap.)",
+  "summary": "Multi-module personal app (Follow-ups, R&D, Wallet, Profile) on Expo + Firestore. Wallet roadmap is mid-flight; now adding a Tasks/To-Do module with add / close / delete.",
+  "createdAt": "2026-06-14T05:13:08.079Z",
+  "updatedAt": "2026-06-14T05:21:20.131Z"
+}
